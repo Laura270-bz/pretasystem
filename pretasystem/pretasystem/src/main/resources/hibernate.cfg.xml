@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+	<session-factory>
+	
+		<property name="hibernate.dialect">
+			org.hibernate.dialect.PostgreSQLDialect
+		</property>
+        <property name="hibernate.connection.driver_class">
+        	org.postgresql.Driver
+        </property>
+        <property name="hibernate.connection.url">
+        	jdbc:postgresql://localhost:5432/pretasystem_db
+        </property>
+        <property name="hibernate.connection.username">postgres</property>
+        <property name="hibernate.connection.password">laura</property>
+        <property name="hibernate.current_session_context_class">thread</property>
+        
+        <!-- Muestra en consola las sentencias SQL ejecutadas -->
+        <property name="show_sql">true</property>
+        
+        <!-- Genera y actualiza automáticamente la estructura de la base de datos -->
+        <property name="hbm2ddl.auto">update</property>
+        
+        <mapping class="facitec.edu.py.pretasystem_entidades.Categoria_Producto"/>
+        <mapping class="facitec.edu.py.pretasystem_entidades.Consumo_Materia_Prima"/>
+        <mapping class="facitec.edu.py.pretasystem_entidades.Materia_Prima"/>
+        <mapping class="facitec.edu.py.pretasystem_entidades.Orden_Produccion"/>
+        <mapping class="facitec.edu.py.pretasystem_entidades.Producto_Terminado"/>
+        <mapping class="facitec.edu.py.pretasystem_entidades.Proveedor"/>
+        <mapping class="facitec.edu.py.pretasystem_entidades.Usuario"/>
+
+	</session-factory>
+</hibernate-configuration>

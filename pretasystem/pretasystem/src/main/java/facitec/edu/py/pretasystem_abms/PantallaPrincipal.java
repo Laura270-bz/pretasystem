@@ -14,6 +14,7 @@ import javax.swing.ImageIcon;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.Toolkit;
+import java.awt.Color;
 
 public class PantallaPrincipal extends JFrame {
 
@@ -36,6 +37,7 @@ public class PantallaPrincipal extends JFrame {
 
 	
 	public PantallaPrincipal() {
+		getContentPane().setBackground(new Color(255, 240, 245));
 		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\ojeda\\Documents\\Septimo semestre\\Seminario III\\ICONO\\fprincipal.png"));
 		setTitle("PretaSystem - Trapillos BELA PRETA");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -44,49 +46,74 @@ public class PantallaPrincipal extends JFrame {
 		getContentPane().setLayout(null);
 		
 		JButton btnMateriaPrima = new JButton("Materia Prima");
+		btnMateriaPrima.setBackground(new Color(255, 128, 192));
 		btnMateriaPrima.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 			}
 		});
 		btnMateriaPrima.setIcon(new ImageIcon("C:\\Users\\ojeda\\Documents\\Octavo Semestre\\Taller VIII\\Iconos\\Materia Prima.png"));
-		btnMateriaPrima.setBounds(10, 10, 88, 54);
+		btnMateriaPrima.setBounds(10, 10, 149, 75);
 		getContentPane().add(btnMateriaPrima);
 		
 		JButton btnProducto = new JButton("Producto");
+		btnProducto.setBackground(new Color(255, 128, 192));
 		btnProducto.setIcon(new ImageIcon("C:\\Users\\ojeda\\Documents\\Octavo Semestre\\Taller VIII\\Iconos\\Producto.png"));
-		btnProducto.setBounds(10, 67, 88, 54);
+		btnProducto.setBounds(10, 95, 149, 81);
 		getContentPane().add(btnProducto);
 		
 		JButton btnCategoria = new JButton("Categoria");
+		btnCategoria.setBackground(new Color(255, 128, 192));
 		btnCategoria.setIcon(new ImageIcon("C:\\Users\\ojeda\\Documents\\Octavo Semestre\\Taller VIII\\Iconos\\Categoria.png"));
-		btnCategoria.setBounds(10, 131, 88, 54);
+		btnCategoria.setBounds(10, 186, 149, 75);
 		getContentPane().add(btnCategoria);
 		
 		JButton btnProveedor = new JButton("Proveedor");
+		btnProveedor.setBackground(new Color(255, 128, 192));
 		btnProveedor.setIcon(new ImageIcon("C:\\Users\\ojeda\\Documents\\Octavo Semestre\\Taller VIII\\Iconos\\Proveedor.png"));
-		btnProveedor.setBounds(10, 195, 88, 54);
+		btnProveedor.setBounds(10, 271, 149, 69);
 		getContentPane().add(btnProveedor);
 		
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
 		
-		JMenu mnMateriaPrima = new JMenu("Materia Prima");
-		menuBar.add(mnMateriaPrima);
+		JMenu mnConfiguración = new JMenu("Configuración");
+		menuBar.add(mnConfiguración);
 		
-		JMenu mnNewMenu = new JMenu("Consumo Materia Prima");
-		mnMateriaPrima.add(mnNewMenu);
+		JMenuItem mntmUsuarios = new JMenuItem("Usuarios");
+		mnConfiguración.add(mntmUsuarios);
 		
-		JMenu mnProducción = new JMenu("Orden de Producción");
-		menuBar.add(mnProducción);
+		JMenu mnRegistros = new JMenu("Registros");
+		menuBar.add(mnRegistros);
 		
-		JMenu mnProveedores = new JMenu("Proveedor");
-		menuBar.add(mnProveedores);
+		JMenuItem mntmMateriaPrima = new JMenuItem("Materia Prima");
+		mnRegistros.add(mntmMateriaPrima);
 		
-		JMenu mnProducto = new JMenu("Producto Terminado");
-		menuBar.add(mnProducto);
+		JMenuItem mntmConsumo = new JMenuItem("Consumo de Materia Prima");
+		mnRegistros.add(mntmConsumo);
 		
-		JMenu mnCategoriaProducto = new JMenu("Categorias");
-		menuBar.add(mnCategoriaProducto);
+		JMenuItem mntmOrdenProducción = new JMenuItem("Orden de Producción");
+		mnRegistros.add(mntmOrdenProducción);
+		
+		JMenuItem mntmProveedor = new JMenuItem("Proveedor");
+		mnRegistros.add(mntmProveedor);
+		
+		JMenu mnProductos = new JMenu("Productos");
+		menuBar.add(mnProductos);
+		
+		JMenuItem mntmCategoria = new JMenuItem("Categoria de Producto");
+		mnProductos.add(mntmCategoria);
+		
+		JMenuItem mntmProductoTerminado = new JMenuItem("Producto Terminado");
+		mnProductos.add(mntmProductoTerminado);
+		
+		JMenu mnReportes = new JMenu("Reportes");
+		menuBar.add(mnReportes);
+		
+		JMenuItem mnReporteMateriaPrima = new JMenuItem("Reporte de Materia Prima");
+		mnReportes.add(mnReporteMateriaPrima);
+		
+		JMenuItem mnReporteProductoTerminado = new JMenuItem("Reporte de Producto Terminado");
+		mnReportes.add(mnReporteProductoTerminado);
 		
 		
 	

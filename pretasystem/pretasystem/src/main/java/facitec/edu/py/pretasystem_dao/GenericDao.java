@@ -22,6 +22,7 @@ public abstract class GenericDao<T> {
 		if (!getSession().getTransaction().isActive()) {
 			getSession().beginTransaction();
 		}
+		}
 		// significa que va recibir cualquier tipo de entidad y es
 		// esa entidad lo que vamos a persistir por lo tanto se pasaa .persist(entity)
 		public void guardar(T entity) throws Exception {
