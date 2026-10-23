@@ -15,23 +15,17 @@ public class Usuario {
 	@GenericGenerator(name = "cli_generator", strategy = "increment")
 	@GeneratedValue(generator = "cli_generator")
 	private int id_usuario;
-	@Column(nullable = false, length = 255)
+
+	@Column(nullable = false, unique = true, length = 255) // el nombre de usuario no se repite
 	private String usuario;
+
 	@Column(nullable = false, length = 255)
 	private String correo;
-	@Column(nullable = false, unique = true, length = 255)
-	private String contraseña;
+
+	@Column(nullable = false, length = 255) // guarda el HASH de la clave (no el texto plano)
+	private String contrasena;
 
 	public Usuario() {
-		// TODO Auto-generated constructor stub
-	}
-
-	public Usuario(int id_usuario, String usuario, String correo, String contraseña) {
-		super();
-		this.id_usuario = id_usuario;
-		this.usuario = usuario;
-		this.correo = correo;
-		this.contraseña = contraseña;
 	}
 
 	public int getId_usuario() {
@@ -58,18 +52,16 @@ public class Usuario {
 		this.correo = correo;
 	}
 
-	public String getContraseña() {
-		return contraseña;
+	public String getContrasena() {
+		return contrasena;
 	}
 
-	public void setContraseña(String contraseña) {
-		this.contraseña = contraseña;
+	public void setContrasena(String contrasena) {
+		this.contrasena = contrasena;
 	}
 
 	@Override
 	public String toString() {
-		return "Usuario [id_usuario=" + id_usuario + ", usuario=" + usuario + ", correo=" + correo + ", contraseña="
-				+ contraseña + "]";
+		return "Usuario [id_usuario=" + id_usuario + ", usuario=" + usuario + ", correo=" + correo + "]";
 	}
-
 }

@@ -6,6 +6,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -15,30 +17,35 @@ public class Producto_Terminado {
 	@GenericGenerator(name = "cli_generator", strategy = "increment")
 	@GeneratedValue(generator = "cli_generator")
 	private int id_producto_terminado;
+
 	@Column(nullable = false, length = 255)
 	private String nombre;
+
 	@Column(nullable = false, length = 255)
 	private String color;
-	@Column(nullable = false, length = 255)
+
+	@Column(nullable = false)
 	private int stock_actual;
+
+	@Column(nullable = false)
 	private int stock_minimo;
+
+	@Column(nullable = false)
 	private int precio_minorista;
+
+	@Column(nullable = false)
 	private int precio_mayorista;
 
-	public Producto_Terminado() {
-		// TODO Auto-generated constructor stub
-	}
+	// RELACIONES (FK del diagrama) 
+	@ManyToOne(optional = false)
+	@JoinColumn(name = "id_categoria_producto", nullable = false)
+	private Categoria_Producto categoria_producto;
 
-	public Producto_Terminado(int id_producto_terminado, String nombre, String color, int stock_actual,
-			int stock_minimo, int precio_minorista, int precio_mayorista) {
-		super();
-		this.id_producto_terminado = id_producto_terminado;
-		this.nombre = nombre;
-		this.color = color;
-		this.stock_actual = stock_actual;
-		this.stock_minimo = stock_minimo;
-		this.precio_minorista = precio_minorista;
-		this.precio_mayorista = precio_mayorista;
+	@ManyToOne
+	@JoinColumn(name = "id_orden_produccion", nullable = true)
+	private Orden_Produccion orden_produccion;
+
+	public Producto_Terminado() {
 	}
 
 	public int getId_producto_terminado() {
@@ -97,11 +104,26 @@ public class Producto_Terminado {
 		this.precio_mayorista = precio_mayorista;
 	}
 
-	@Override
-	public String toString() {
-		return "Producto_Terminado [id_producto_terminado=" + id_producto_terminado + ", nombre=" + nombre + ", color="
-				+ color + ", stock_actual=" + stock_actual + ", stock_minimo=" + stock_minimo + ", precio_minorista="
-				+ precio_minorista + ", precio_mayorista=" + precio_mayorista + "]";
+	public Categoria_Producto getCategoria_producto() {
+		return categoria_producto;
 	}
 
+	public void setCategoria_producto(Categoria_Producto categoria_producto) {
+		this.categoria_producto = categoria_producto;
+	}
+
+	public Orden_Produccion getOrden_produccion() {
+		return orden_produccion;
+	}
+
+	public void setOrden_produccion(Orden_Produccion orden_produccion) {
+		this.orden_produccion = orden_produccion;
+	}
+
+	@Override
+	public String toString() {
+		return "Producto_Terminado [id=" + id_producto_terminado + ", nombre=" + nombre + ", color=" + color
+				+ ", stock_actual=" + stock_actual + ", stock_minimo=" + stock_minimo + ", precio_minorista="
+				+ precio_minorista + ", precio_mayorista=" + precio_mayorista + "]";
+	}
 }
