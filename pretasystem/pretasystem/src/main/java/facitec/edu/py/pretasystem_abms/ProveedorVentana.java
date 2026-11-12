@@ -4,6 +4,7 @@ package facitec.edu.py.pretasystem_abms;
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.sql.SQLException;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -40,10 +41,8 @@ public class ProveedorVentana extends JFrame {
 
 	private final Proveedor_Dao dao = new Proveedor_Dao();
 
-	// Guarda el proveedor seleccionado.
 	private Proveedor seleccionado = null;
 
-	// Indica si el formulario está en modo edición.
 	private boolean modoEdicion = false;
 
 	public static void main(String[] args) {
@@ -116,15 +115,15 @@ public class ProveedorVentana extends JFrame {
 		lblBuscar.setBounds(330, 18, 50, 22);
 		getContentPane().add(lblBuscar);
 
-		// Icono de lupa.
+		txtBuscar = new JTextField();
+		txtBuscar.setBounds(385, 18, 300, 25);
+		getContentPane().add(txtBuscar);
+
+		// Icono de lupa a la derecha del campo de búsqueda.
 		JLabel lblLupa = new JLabel("\uD83D\uDD0D");
 		lblLupa.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18));
-		lblLupa.setBounds(375, 15, 25, 25);
+		lblLupa.setBounds(690, 16, 30, 28);
 		getContentPane().add(lblLupa);
-
-		txtBuscar = new JTextField();
-		txtBuscar.setBounds(405, 18, 300, 22);
-		getContentPane().add(txtBuscar);
 
 		// Actualiza la tabla cuando cambia el texto del buscador.
 		txtBuscar.getDocument().addDocumentListener(new DocumentListener() {
@@ -161,8 +160,8 @@ public class ProveedorVentana extends JFrame {
 		table = new JTable(modelo);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-		// Al seleccionar una fila, recupera el proveedor,
-		// pero no carga todavía sus datos en el formulario.
+		// Seleccionar una fila recupera el proveedor,
+		// pero no carga sus datos hasta pulsar Editar.
 		table.getSelectionModel().addListSelectionListener(e -> {
 
 			if (!e.getValueIsAdjusting()) {
@@ -194,7 +193,7 @@ public class ProveedorVentana extends JFrame {
 	}
 
 	/**
-	 * Recupera los proveedores de la base de datos y los muestra en la tabla.
+	 * Recupera los proveedores y los muestra en la tabla.
 	 */
 	private void cargarTabla() {
 
@@ -212,8 +211,7 @@ public class ProveedorVentana extends JFrame {
 	}
 
 	/**
-	 * Recupera el proveedor seleccionado en la tabla. No carga sus datos en el
-	 * formulario.
+	 * Recupera el proveedor seleccionado en la tabla.
 	 */
 	private void seleccionarRegistro() {
 
@@ -225,19 +223,15 @@ public class ProveedorVentana extends JFrame {
 			return;
 		}
 
-		// Obtiene el ID del proveedor seleccionado.
 		int id = ((Number) modelo.getValueAt(fila, 0)).intValue();
 
-		// Recupera el proveedor desde la base de datos.
 		seleccionado = dao.recuperarPorId(id);
 
-		// Todavía no se activa el modo edición.
 		modoEdicion = false;
 	}
 
 	/**
-	 * Registra un proveedor nuevo o actualiza el proveedor seleccionado cuando está
-	 * en edición.
+	 * Registra un proveedor nuevo o actualiza uno existente.
 	 */
 	private void guardar() {
 
@@ -250,46 +244,65 @@ public class ProveedorVentana extends JFrame {
 		// Validación de campos obligatorios.
 		if (doc.isEmpty() || nombre.isEmpty() || dir.isEmpty() || tel.isEmpty() || email.isEmpty()) {
 
-			JOptionPane.showMessageDialog(this, "Todos los campos son obligatorios");
-
+			JOptionPane.showMessageDialog(this, "Todos los campos son obligatorios", "Validación",
+					JOptionPane.WARNING_MESSAGE);
 			return;
 		}
 
 		// Validación básica del correo electrónico.
 		if (!email.contains("@") || email.startsWith("@") || email.endsWith("@")) {
 
-			JOptionPane.showMessageDialog(this, "El email no es válido");
-
+			JOptionPane.showMessageDialog(this, "El email no es válido", "Validación", JOptionPane.WARNING_MESSAGE);
 			return;
 		}
 
 		try {
 
+			// En edición se excluye el ID del proveedor actual.
+			Integer idExcluir = null;
+
 			if (modoEdicion) {
 
-				// Comprueba que exista un proveedor seleccionado.
 				if (seleccionado == null) {
 
-					JOptionPane.showMessageDialog(this, "Seleccione un proveedor para editar");
-
+					JOptionPane.showMessageDialog(this, "Seleccione un proveedor para editar", "Atención",
+							JOptionPane.WARNING_MESSAGE);
 					return;
 				}
 
-				// Actualiza el proveedor existente.
+				idExcluir = seleccionado.getId_proveedores();
+			}
+
+			// Comprueba si el CI/RUC ya pertenece a otro proveedor.
+			if (dao.existeDocumento(doc, idExcluir)) {
+
+				JOptionPane.showMessageDialog(this,
+						"Ya existe un proveedor registrado con ese CI/RUC.\n",
+						"Documento duplicado", JOptionPane.WARNING_MESSAGE);
+
+				txtDocumento.requestFocus();
+				txtDocumento.selectAll();
+
+				return;
+			}
+
+			if (modoEdicion) {
+
+				// Actualiza el proveedor seleccionado.
 				seleccionado.setDocumento(doc);
 				seleccionado.setNombre(nombre);
 				seleccionado.setDireccion(dir);
 				seleccionado.setTelefono(tel);
 				seleccionado.setEmail(email);
 
-				// Guarda los cambios en la base de datos.
 				dao.guardar(seleccionado);
 
-				JOptionPane.showMessageDialog(this, "Proveedor editado correctamente");
+				JOptionPane.showMessageDialog(this, "Proveedor editado correctamente", "Operación exitosa",
+						JOptionPane.INFORMATION_MESSAGE);
 
 			} else {
 
-				// Crea un proveedor nuevo.
+				// Registra un proveedor nuevo.
 				Proveedor p = new Proveedor();
 
 				p.setDocumento(doc);
@@ -298,49 +311,90 @@ public class ProveedorVentana extends JFrame {
 				p.setTelefono(tel);
 				p.setEmail(email);
 
-				// Guarda el nuevo proveedor.
 				dao.guardar(p);
 
-				JOptionPane.showMessageDialog(this, "Proveedor guardado correctamente");
+				JOptionPane.showMessageDialog(this, "Proveedor guardado correctamente", "Operación exitosa",
+						JOptionPane.INFORMATION_MESSAGE);
 			}
 
-			// Limpia el formulario y actualiza la tabla.
 			limpiar();
 			cargarTabla();
 
 		} catch (Exception ex) {
 
-			ex.printStackTrace();
+			// Evita mostrar al usuario el error técnico de Hibernate o SQL.
+			if (esErrorDeDocumentoDuplicado(ex)) {
 
-			JOptionPane.showMessageDialog(this,
-					"No se pudo guardar. Verifique si el documento ya existe.\n" + ex.getMessage());
+				JOptionPane.showMessageDialog(this,
+						"Ya existe un proveedor registrado con ese CI/RUC.\n" + "Ingrese un documento diferente.",
+						"Documento duplicado", JOptionPane.WARNING_MESSAGE);
+
+				txtDocumento.requestFocus();
+				txtDocumento.selectAll();
+
+			} else {
+
+				JOptionPane.showMessageDialog(this,
+						"No se pudo guardar el proveedor. Verifique los datos e intente nuevamente.", "Error",
+						JOptionPane.ERROR_MESSAGE);
+			}
 		}
 	}
 
 	/**
-	 * Carga los datos del proveedor seleccionado en el formulario y activa el modo
-	 * edición.
+	 * Identifica errores de clave única o integridad de la base de datos.
+	 */
+	private boolean esErrorDeDocumentoDuplicado(Throwable ex) {
+
+		Throwable causa = ex;
+
+		while (causa != null) {
+
+			if (causa instanceof SQLException) {
+
+				String estado = ((SQLException) causa).getSQLState();
+
+				// PostgreSQL: 23505.
+				// MySQL: 23000.
+				if ("23505".equals(estado) || "23000".equals(estado)) {
+					return true;
+				}
+			}
+
+			String nombreClase = causa.getClass().getSimpleName();
+
+			if ("ConstraintViolationException".equals(nombreClase)) {
+				return true;
+			}
+
+			causa = causa.getCause();
+		}
+
+		return false;
+	}
+
+	/**
+	 * Carga los datos del proveedor seleccionado y activa la edición.
 	 */
 	private void editar() {
 
 		if (seleccionado == null) {
 
-			JOptionPane.showMessageDialog(this, "Seleccione un proveedor de la tabla");
-
+			JOptionPane.showMessageDialog(this, "Seleccione un proveedor de la tabla", "Atención",
+					JOptionPane.WARNING_MESSAGE);
 			return;
 		}
 
-		// Carga los datos del proveedor en los campos.
 		txtDocumento.setText(seleccionado.getDocumento());
 		txtNombre.setText(seleccionado.getNombre());
 		txtDireccion.setText(seleccionado.getDireccion());
 		txtTelefono.setText(seleccionado.getTelefono());
 		txtEmail.setText(seleccionado.getEmail());
 
-		// Activa el modo edición.
 		modoEdicion = true;
 
-		JOptionPane.showMessageDialog(this, "Puede modificar los datos del proveedor seleccionado");
+		JOptionPane.showMessageDialog(this, "Puede modificar los datos del proveedor seleccionado", "Modo edición",
+				JOptionPane.INFORMATION_MESSAGE);
 	}
 
 	/**
@@ -350,8 +404,8 @@ public class ProveedorVentana extends JFrame {
 
 		if (seleccionado == null) {
 
-			JOptionPane.showMessageDialog(this, "Seleccione un proveedor de la tabla");
-
+			JOptionPane.showMessageDialog(this, "Seleccione un proveedor de la tabla", "Atención",
+					JOptionPane.WARNING_MESSAGE);
 			return;
 		}
 
@@ -366,17 +420,17 @@ public class ProveedorVentana extends JFrame {
 
 			dao.eliminar(seleccionado);
 
-			JOptionPane.showMessageDialog(this, "Proveedor eliminado correctamente");
+			JOptionPane.showMessageDialog(this, "Proveedor eliminado correctamente", "Operación exitosa",
+					JOptionPane.INFORMATION_MESSAGE);
 
 			limpiar();
 			cargarTabla();
 
 		} catch (Exception ex) {
 
-			ex.printStackTrace();
-
 			JOptionPane.showMessageDialog(this,
-					"No se pudo eliminar. El proveedor puede estar en uso.\n" + ex.getMessage());
+					"No se pudo eliminar el proveedor. Es posible que esté relacionado con otros registros.",
+					"Error al eliminar", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
@@ -400,7 +454,7 @@ public class ProveedorVentana extends JFrame {
 	}
 
 	/**
-	 * Cierra la ventana de proveedores.
+	 * Cierra la ventana.
 	 */
 	private void salir() {
 

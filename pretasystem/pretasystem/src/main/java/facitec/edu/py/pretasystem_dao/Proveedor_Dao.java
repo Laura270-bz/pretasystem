@@ -15,6 +15,48 @@ public class Proveedor_Dao extends GenericDao<Proveedor> {
 	}
 
 	/**
+	 * Comprueba si ya existe un proveedor con el mismo documento.
+	 *
+	 * @param documento documento que se desea verificar.
+	 * @param idExcluir ID del proveedor que se está editando. Si es null, se
+	 *                  verifica sin excluir registros.
+	 */
+	public boolean existeDocumento(String documento, Integer idExcluir) {
+
+		String doc = documento == null ? "" : documento.trim().toLowerCase(Locale.ROOT);
+
+		iniciarTransaccion();
+
+		try {
+
+			String hql = "select count(p.id_proveedores) " + "from Proveedor p "
+					+ "where lower(trim(p.documento)) = :doc";
+
+			if (idExcluir != null) {
+				hql += " and p.id_proveedores <> :id";
+			}
+
+			Query<Long> q = getSession().createQuery(hql, Long.class);
+			q.setParameter("doc", doc);
+
+			if (idExcluir != null) {
+				q.setParameter("id", idExcluir);
+			}
+
+			Long cantidad = q.uniqueResult();
+
+			getSession().getTransaction().commit();
+
+			return cantidad != null && cantidad > 0;
+
+		} catch (Exception e) {
+
+			rollbackTransaccion();
+			throw e;
+		}
+	}
+
+	/**
 	 * Recupera proveedores por nombre o documento.
 	 */
 	@Override
@@ -30,7 +72,6 @@ public class Proveedor_Dao extends GenericDao<Proveedor> {
 					+ "order by p.id_proveedores desc";
 
 			Query<Proveedor> q = getSession().createQuery(hql, Proveedor.class);
-
 			q.setParameter("f", "%" + texto + "%");
 
 			List<Proveedor> lista = q.getResultList();
@@ -42,9 +83,6 @@ public class Proveedor_Dao extends GenericDao<Proveedor> {
 		} catch (Exception e) {
 
 			rollbackTransaccion();
-
-			e.printStackTrace();
-
 			throw e;
 		}
 	}
@@ -71,9 +109,6 @@ public class Proveedor_Dao extends GenericDao<Proveedor> {
 		} catch (Exception e) {
 
 			rollbackTransaccion();
-
-			e.printStackTrace();
-
 			throw e;
 		}
 	}
