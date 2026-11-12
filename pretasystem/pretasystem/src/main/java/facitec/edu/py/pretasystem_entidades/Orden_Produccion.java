@@ -12,6 +12,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+/**
+ * Igual al DER: id, fecha_inicio, fecha_fin (NULL), cantidad_estimada,
+ * cantidad_real (NULL), etapa_actual, id_usuario.
+ */
 @Entity
 @Table(name = "orden_produccion")
 public class Orden_Produccion {
@@ -23,19 +27,18 @@ public class Orden_Produccion {
 	@Column(nullable = false)
 	private Date fecha_inicio;
 
-	@Column(nullable = true) // se completa al cerrar la orden
+	@Column(nullable = true) // se completa cuando la orden se termina de producir
 	private Date fecha_fin;
 
 	@Column(nullable = false)
-	private int cantidad_estimada; // CORREGIDO: nombre (tenia typo) y tipo numerico
+	private int cantidad_estimada;
 
-	@Column(nullable = true) // se completa al cerrar la orden
+	@Column(nullable = true) // acumulado producido hasta ahora
 	private Integer cantidad_real;
 
 	@Column(nullable = false, length = 255)
 	private String etapa_actual; // Corte, Limpieza, Ovillado, Bobinado, Sellado
 
-	// Supervisor responsable. Si todavia no tenes la clase Usuario, comenta estas 2 lineas
 	@ManyToOne
 	@JoinColumn(name = "id_usuario", nullable = true)
 	private Usuario usuario;
@@ -97,6 +100,26 @@ public class Orden_Produccion {
 
 	public void setUsuario(Usuario usuario) {
 		this.usuario = usuario;
+	}
+
+	// ---- Calculados (no se guardan en la base, no cambian el DER) ----
+
+	// Lo producido hasta ahora (si cantidad_real es null, es 0)
+	public int getProducida() {
+		return cantidad_real == null ? 0 : cantidad_real;
+	}
+
+	// Lo que falta producir
+	public int getPendiente() {
+		return Math.max(0, cantidad_estimada - getProducida());
+	}
+
+	// Pendiente / En producción / Completada
+	public String getEstado() {
+		if (fecha_fin != null) {
+			return "Completada";
+		}
+		return getProducida() > 0 ? "En producción" : "Pendiente";
 	}
 
 	@Override

@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.21.5.final using JasperReports Library version 6.21.5-74d586df47b25dbd05bd0957999819196e59934a  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="reporte_consumo_materia_prima" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="239e26d7-31f6-4ee7-b871-1340d0046715">
+	<field name="id_consumo_materia_prima" class="java.lang.Integer"/>
+	<field name="cantidad_usada" class="java.lang.Integer"/>
+	<field name="materia_prima" class="facitec.edu.py.pretasystem_entidades.Materia_Prima"/>
+	<field name="orden_produccion" class="facitec.edu.py.pretasystem_entidades.Orden_Produccion"/>
+	<variable name="totalCantidadUsada" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{cantidad_usada}]]></variableExpression>
+	</variable>
+	<title>
+		<band height="85">
+			<staticText>
+				<reportElement x="0" y="5" width="802" height="30" uuid="eb7feb92-a1c4-48c3-bf7e-08a8122c0f10"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="18" isBold="true"/>
+				</textElement>
+				<text><![CDATA[PRETASYSTEM]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="38" width="802" height="25" uuid="cf133996-ae61-46b7-b587-fd74b0853bcd"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[REPORTE DE CONSUMO DE MATERIA PRIMA]]></text>
+			</staticText>
+			<line>
+				<reportElement x="0" y="73" width="802" height="1" uuid="c3c8f272-2669-4224-880f-5abe6002e222"/>
+			</line>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="35">
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="3" width="90" height="28" backcolor="#D9E2F3" uuid="525e67bc-7c6d-4881-bbb8-bb4d5f7701bd"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ID Consumo]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="90" y="3" width="210" height="28" backcolor="#D9E2F3" uuid="c6ec1628-4efe-42f5-8f32-4ae2e9a9bb69"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Materia prima]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="300" y="3" width="130" height="28" backcolor="#D9E2F3" uuid="dd596aad-d879-4c7e-805e-43f4196ca350"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Cantidad utilizada]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="430" y="3" width="130" height="28" backcolor="#D9E2F3" uuid="a568ea3d-ad1a-4774-9e48-dfa125ce6cba"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ID Orden]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="560" y="3" width="242" height="28" backcolor="#D9E2F3" uuid="9010decc-c829-42b3-a4dd-9bd956fff2aa"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Etapa de producción]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="30">
+			<textField>
+				<reportElement x="0" y="0" width="90" height="28" uuid="e03644f1-2cf2-4a86-9363-a19ec591d354"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{id_consumo_materia_prima}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="90" y="0" width="210" height="28" uuid="ce97a3fd-e7d4-4ef5-9060-c8361d52483c"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{materia_prima} == null ? "" : $F{materia_prima}.getNombre()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="300" y="0" width="130" height="28" uuid="f0786db3-ae87-4aea-9d5f-e27e211b902e"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{cantidad_usada}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="430" y="0" width="130" height="28" uuid="89ef13ac-e92a-4529-b9dd-58708c6ed3f5"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{orden_produccion} == null ? "" : String.valueOf($F{orden_produccion}.getId_orden_produccion())]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="560" y="0" width="242" height="28" uuid="af17416d-c6ac-42b7-add0-c4c63345d65e"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{orden_produccion} == null ? "" : $F{orden_produccion}.getEtapa_actual()]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<pageFooter>
+		<band height="25">
+			<staticText>
+				<reportElement x="0" y="5" width="400" height="15" uuid="d91b0122-8821-4195-9aee-4c7b17013424"/>
+				<textElement>
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<text><![CDATA[PRETASYSTEM - Sistema de Gestión de Producción]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="700" y="5" width="102" height="15" uuid="9c4c954d-6081-4604-a128-bee8261ead1e"/>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Página " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="55">
+			<line>
+				<reportElement x="0" y="5" width="802" height="1" uuid="b8792339-d3bc-4623-b721-6555a93ded35"/>
+			</line>
+			<staticText>
+				<reportElement x="300" y="15" width="200" height="25" uuid="7ba8f654-58c6-4c54-907f-9de022ccea68"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[TOTAL DE CANTIDAD UTILIZADA:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="510" y="15" width="150" height="25" uuid="2f01f44a-3628-42d8-b5a7-ba22512a8d25"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="11" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{totalCantidadUsada} == null ? 0 : $V{totalCantidadUsada}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

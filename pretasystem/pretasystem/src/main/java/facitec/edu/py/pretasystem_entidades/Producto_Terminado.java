@@ -36,11 +36,12 @@ public class Producto_Terminado {
 	@Column(nullable = false)
 	private int precio_mayorista;
 
-	// RELACIONES (FK del diagrama) 
+	// RELACIONES (FK del diagrama) que faltaban
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "id_categoria_producto", nullable = false)
 	private Categoria_Producto categoria_producto;
 
+	// "Orden de produccion que origino el lote" (segun el DER). Se completa al registrar produccion.
 	@ManyToOne
 	@JoinColumn(name = "id_orden_produccion", nullable = true)
 	private Orden_Produccion orden_produccion;

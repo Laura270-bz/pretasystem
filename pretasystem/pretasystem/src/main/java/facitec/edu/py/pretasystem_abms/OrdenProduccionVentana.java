@@ -58,7 +58,7 @@ public class OrdenProduccionVentana extends JFrame {
 
 	public OrdenProduccionVentana() {
 		setTitle("Orden de Producción - Consumo de Materia Prima");
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // si la abris desde el menu, no cierra todo el sistema
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setBounds(100, 100, 800, 560);
 		setLocationRelativeTo(null);
 		getContentPane().setLayout(null);
@@ -110,7 +110,8 @@ public class OrdenProduccionVentana extends JFrame {
 				super.getListCellRendererComponent(list, value, index, sel, focus);
 				if (value instanceof Materia_Prima) {
 					Materia_Prima m = (Materia_Prima) value;
-					setText(m.getNombre() + "  (stock: " + m.getStock_actual() + " " + m.getUnidad_medida() + ")");
+					setText(m.getNombre() + "  (stock: " + FormatoUtil.miles(m.getStock_actual()) + " "
+							+ m.getUnidad_medida() + ")");
 				}
 				return this;
 			}
@@ -145,33 +146,38 @@ public class OrdenProduccionVentana extends JFrame {
 			}
 		};
 		table = new JTable(modeloTabla);
-		table.getColumnModel().getColumn(1).setCellRenderer(FormatoUtil.rendererMiles()); // Cantidad
+		table.getColumnModel().getColumn(1).setCellRenderer(FormatoUtil.rendererMiles());
 		JScrollPane scroll = new JScrollPane(table);
 		scroll.setBounds(15, 150, 755, 290);
 		getContentPane().add(scroll);
 
 		// ---------- BOTONES ----------
 		JButton btnConfirmar = new JButton("Confirmar orden");
-		btnConfirmar.setBounds(15, 460, 240, 36);
+		btnConfirmar.setBounds(15, 460, 180, 36);
 		btnConfirmar.addActionListener(e -> confirmar());
 		getContentPane().add(btnConfirmar);
 
 		JButton btnCancelar = new JButton("Cancelar");
-		btnCancelar.setBounds(270, 460, 110, 36);
+		btnCancelar.setBounds(205, 460, 100, 36);
 		btnCancelar.addActionListener(e -> limpiar());
 		getContentPane().add(btnCancelar);
 
-		JButton btnVerOrdenes = new JButton("Ver órdenes registradas");
-		btnVerOrdenes.setBounds(395, 460, 200, 36);
+		JButton btnVerOrdenes = new JButton("Ver órdenes");
+		btnVerOrdenes.setBounds(395, 460, 185, 36);
 		btnVerOrdenes.addActionListener(e -> new OrdenesRegistradasVentana().setVisible(true));
 		getContentPane().add(btnVerOrdenes);
 
-		cargarMaterias();
+		JButton btnSalir = new JButton("Salir");
+		btnSalir.setBounds(670, 460, 100, 36);
+		btnSalir.addActionListener(e -> salir());
+		getContentPane().add(btnSalir);
+
+		cargarCombos();
 	}
 
-	private void cargarMaterias() {
-		List<Materia_Prima> lista = materiaDao.recuperarPorFiltro("");
-		cmbMateria.setModel(new DefaultComboBoxModel<>(lista.toArray(new Materia_Prima[0])));
+	private void cargarCombos() {
+		List<Materia_Prima> materias = materiaDao.recuperarPorFiltro("");
+		cmbMateria.setModel(new DefaultComboBoxModel<>(materias.toArray(new Materia_Prima[0])));
 	}
 
 	private void agregarDetalle() {
@@ -182,7 +188,6 @@ public class OrdenProduccionVentana extends JFrame {
 		}
 		int cantidad = ((Number) spnCantidad.getValue()).intValue();
 
-		// buscar si ya se agrego esa materia prima (se suman las cantidades)
 		Consumo_Materia_Prima existente = null;
 		for (Consumo_Materia_Prima c : detalle) {
 			if (c.getMateria_prima().getId_materia_prima() == mp.getId_materia_prima()) {
@@ -194,7 +199,7 @@ public class OrdenProduccionVentana extends JFrame {
 
 		if (yaAgregado + cantidad > mp.getStock_actual()) {
 			JOptionPane.showMessageDialog(this, "Stock insuficiente de " + mp.getNombre() + ". Disponible: "
-					+ mp.getStock_actual() + " " + mp.getUnidad_medida());
+					+ FormatoUtil.miles(mp.getStock_actual()) + " " + mp.getUnidad_medida());
 			return;
 		}
 
@@ -232,8 +237,8 @@ public class OrdenProduccionVentana extends JFrame {
 			JOptionPane.showMessageDialog(this, "Agregue al menos una materia prima");
 			return;
 		}
-		int op = JOptionPane.showConfirmDialog(this, "¿Confirmar la orden? Se descontará el stock de materia prima.", "Confirmar",
-				JOptionPane.YES_NO_OPTION);
+		int op = JOptionPane.showConfirmDialog(this, "¿Confirmar la orden? Se descontará el stock de materia prima.",
+				"Confirmar", JOptionPane.YES_NO_OPTION);
 		if (op != JOptionPane.YES_OPTION) {
 			return;
 		}
@@ -243,11 +248,14 @@ public class OrdenProduccionVentana extends JFrame {
 			orden.setFecha_inicio(new Date(((java.util.Date) spnFechaInicio.getValue()).getTime()));
 			orden.setCantidad_estimada(((Number) spnCantidadEstimada.getValue()).intValue());
 			orden.setEtapa_actual(cmbEtapa.getSelectedItem().toString());
-			orden.setUsuario(SesionUsuario.getUsuario()); // usuario que inicio sesion (null si no hay login)
+			orden.setCantidad_real(0);
+			orden.setUsuario(SesionUsuario.getUsuario());
 
 			List<String> alertas = ordenDao.guardarOrdenConConsumos(orden, new ArrayList<>(detalle));
 
-			String msg = "Orden N° " + orden.getId_orden_produccion() + " registrada. Stock actualizado.";
+			String msg = "Orden N° " + orden.getId_orden_produccion() + " registrada.\nPendiente de producir: "
+					+ FormatoUtil.miles(orden.getCantidad_estimada())
+					+ ".\nLa producción se registra en Producto Terminado.";
 			if (!alertas.isEmpty()) {
 				msg += "\n\nALERTA - stock minimo:\n- " + String.join("\n- ", alertas);
 			}
@@ -265,6 +273,19 @@ public class OrdenProduccionVentana extends JFrame {
 		spnCantidadEstimada.setValue(1);
 		spnCantidad.setValue(1);
 		cmbEtapa.setSelectedIndex(0);
-		cargarMaterias(); // recarga para ver el stock ya actualizado
+		cargarCombos();
+	}
+
+	// Cierra solo esta ventana; si hay una orden a medias, pregunta antes
+	private void salir() {
+		if (!detalle.isEmpty()) {
+			int op = JOptionPane.showConfirmDialog(this,
+					"Hay materias primas cargadas que no se confirmaron. ¿Salir igual?", "Confirmar",
+					JOptionPane.YES_NO_OPTION);
+			if (op != JOptionPane.YES_OPTION) {
+				return;
+			}
+		}
+		dispose();
 	}
 }

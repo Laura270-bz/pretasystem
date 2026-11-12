@@ -2,6 +2,8 @@ package facitec.edu.py.pretasystem_abms;
 
 import java.awt.Color;
 import java.awt.EventQueue;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -56,10 +58,24 @@ public class UsuarioVentana extends JFrame {
 		txtCorreo = texto(panel, "Correo:", 70);
 		txtClave = clave(panel, "Contraseña:", 130);
 		txtClave2 = clave(panel, "Repetir contraseña:", 190);
+		activarLimpiezaDePuntos();
 
-		JLabel nota = new JLabel("<html>Al editar, dejá la contraseña vacía<br>para mantener la actual.</html>");
-		nota.setBounds(10, 250, 280, 34);
+		JLabel nota = new JLabel(
+				"<html>Al editar, dejá los asteriscos para<br>mantener la contraseña actual<br>o escribí una nueva.</html>");
+		nota.setBounds(10, 250, 280, 50);
 		panel.add(nota);
+
+		// Solo el administrador puede registrar, editar y eliminar usuarios
+		boolean esAdmin = puedeAdministrar();
+		// el título indica con qué rol estás usando la ventana
+		setTitle("ABM - Usuario" + (SesionUsuario.esAdministrador() ? "  (Administrador)" : ""));
+		txtUsuario.setEnabled(esAdmin);
+		txtCorreo.setEnabled(esAdmin);
+		txtClave.setEnabled(esAdmin);
+		txtClave2.setEnabled(esAdmin);
+		if (!esAdmin) {
+			nota.setText("<html>Solo el administrador puede<br>registrar, editar o eliminar<br>usuarios.</html>");
+		}
 
 		JSeparator sep = new JSeparator();
 		sep.setBounds(10, 380, 280, 6);
@@ -80,6 +96,9 @@ public class UsuarioVentana extends JFrame {
 		btnCancelar.addActionListener(e -> limpiar());
 		panel.add(btnCancelar);
 
+		btnGuardar.setEnabled(esAdmin);
+		btnEliminar.setEnabled(esAdmin);
+
 		modelo = new DefaultTableModel(new Object[] { "ID", "Usuario", "Correo" }, 0) {
 			private static final long serialVersionUID = 1L;
 
@@ -97,8 +116,9 @@ public class UsuarioVentana extends JFrame {
 				if (seleccionado != null) {
 					txtUsuario.setText(seleccionado.getUsuario());
 					txtCorreo.setText(seleccionado.getCorreo());
-					txtClave.setText("");
-					txtClave2.setText("");
+					// la contraseña se guarda cifrada (no se puede mostrar); se muestran asteriscos
+					txtClave.setText(PUNTOS);
+					txtClave2.setText(PUNTOS);
 				}
 			}
 		});
@@ -107,6 +127,28 @@ public class UsuarioVentana extends JFrame {
 		getContentPane().add(sp);
 
 		cargarTabla();
+	}
+
+	private static final String PUNTOS = "********";
+
+	// Al hacer clic en una contraseña que muestra los asteriscos, se vacían ambos campos para escribir una nueva
+	private void activarLimpiezaDePuntos() {
+		FocusAdapter fa = new FocusAdapter() {
+			@Override
+			public void focusGained(FocusEvent e) {
+				if (new String(txtClave.getPassword()).equals(PUNTOS)) {
+					txtClave.setText("");
+					txtClave2.setText("");
+				}
+			}
+		};
+		txtClave.addFocusListener(fa);
+		txtClave2.addFocusListener(fa);
+	}
+
+	// Es administrador, o todavía no hay ningún usuario registrado (primer usuario)
+	private boolean puedeAdministrar() {
+		return SesionUsuario.esAdministrador() || dao.contarUsuarios() == 0;
 	}
 
 	private JTextField texto(JPanel p, String etiqueta, int y) {
@@ -142,7 +184,18 @@ public class UsuarioVentana extends JFrame {
 		String correo = txtCorreo.getText().trim();
 		String c1 = new String(txtClave.getPassword());
 		String c2 = new String(txtClave2.getPassword());
+		// si quedaron los asteriscos, la contraseña no se modifica
+		if (c1.equals(PUNTOS)) {
+			c1 = "";
+		}
+		if (c2.equals(PUNTOS)) {
+			c2 = "";
+		}
 
+		if (!puedeAdministrar()) {
+			JOptionPane.showMessageDialog(this, "Solo el administrador puede registrar o editar usuarios");
+			return;
+		}
 		if (nombre.isEmpty() || correo.isEmpty()) {
 			JOptionPane.showMessageDialog(this, "Usuario y correo son obligatorios");
 			return;
@@ -183,6 +236,10 @@ public class UsuarioVentana extends JFrame {
 	}
 
 	private void eliminar() {
+		if (!puedeAdministrar()) {
+			JOptionPane.showMessageDialog(this, "Solo el administrador puede eliminar usuarios");
+			return;
+		}
 		if (seleccionado == null) {
 			JOptionPane.showMessageDialog(this, "Seleccione un usuario de la tabla");
 			return;

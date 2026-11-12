@@ -1,6 +1,8 @@
+
 package facitec.edu.py.pretasystem_dao;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.query.Query;
 
@@ -16,13 +18,36 @@ public class Categoria_Producto_Dao extends GenericDao<Categoria_Producto> {
 	public List<Categoria_Producto> recuperarPorFiltro(String filtro) {
 		iniciarTransaccion();
 		try {
-			Query<Categoria_Producto> q = getSession().createQuery(
-					"from Categoria_Producto c where lower(c.nombre_categoria) like :f order by c.id_categoria_producto desc",
+			String texto = filtro == null ? "" : filtro.trim().toLowerCase(Locale.ROOT);
+
+			Query<Categoria_Producto> q = getSession().createQuery("from Categoria_Producto c "
+					+ "where lower(c.nombre_categoria) like :f " + "order by c.id_categoria_producto desc",
 					Categoria_Producto.class);
-			q.setParameter("f", "%" + filtro.toLowerCase() + "%");
+
+			q.setParameter("f", "%" + texto + "%");
+
 			List<Categoria_Producto> lista = q.getResultList();
 			getSession().getTransaction().commit();
+
 			return lista;
+
+		} catch (Exception e) {
+			getSession().getTransaction().rollback();
+			throw e;
+		}
+	}
+
+	public List<Categoria_Producto> listarParaReporteCategoriaProducto() {
+		iniciarTransaccion();
+		try {
+			Query<Categoria_Producto> q = getSession().createQuery(
+					"from Categoria_Producto c " + "order by c.id_categoria_producto desc", Categoria_Producto.class);
+
+			List<Categoria_Producto> lista = q.getResultList();
+			getSession().getTransaction().commit();
+
+			return lista;
+
 		} catch (Exception e) {
 			getSession().getTransaction().rollback();
 			throw e;

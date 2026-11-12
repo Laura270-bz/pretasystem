@@ -1,3 +1,4 @@
+
 package facitec.edu.py.pretasystem_dao;
 
 import java.io.Serializable;
@@ -9,76 +10,98 @@ import org.hibernate.query.Query;
 import facitec.edu.py.pretasystem_util.ConecctionHelper;
 
 public abstract class GenericDao<T> {
-	protected Class<T> clase;
 
-	public GenericDao(Class<T> clase) {
-		this.clase = clase;
-	}
+    protected Class<T> clase;
 
-	protected Session getSession() {
-		return ConecctionHelper.getSessionFactory().getCurrentSession();
-	}
+    public GenericDao(Class<T> clase) {
+        this.clase = clase;
+    }
 
-	protected void iniciarTransaccion() {
-		if (!getSession().getTransaction().isActive()) {
-			getSession().beginTransaction();
-		}
-	}
+    protected Session getSession() {
+        return ConecctionHelper.getSessionFactory().getCurrentSession();
+    }
 
-	// Guarda (inserta) o actualiza la entidad
-	public void guardar(T entity) throws Exception {
-		iniciarTransaccion();
-		try {
-			getSession().saveOrUpdate(entity);
-			getSession().getTransaction().commit();
-		} catch (Exception e) {
-			getSession().getTransaction().rollback();
-			System.out.println("Generic DAO - Guardar - ERROR");
-			throw e;
-		}
-	}
+    // Inicia una transacción si no existe una activa.
+    protected void iniciarTransaccion() {
+        if (!getSession().getTransaction().isActive()) {
+            getSession().beginTransaction();
+        }
+    }
 
-	// CORREGIDO: la entidad llega "detached" (la sesion anterior ya se cerro),
-	// por eso se hace merge antes de remove.
-	public void eliminar(T entity) throws Exception {
-		iniciarTransaccion();
-		try {
-			Object aEliminar = getSession().contains(entity) ? entity : getSession().merge(entity);
-			getSession().remove(aEliminar);
-			getSession().getTransaction().commit();
-		} catch (Exception e) {
-			getSession().getTransaction().rollback();
-			System.out.println("Generic DAO - Eliminar - ERROR");
-			throw e;
-		}
-	}
+    // Revierte la transacción solamente si está activa.
+    protected void rollbackTransaccion() {
+        if (getSession().getTransaction().isActive()) {
+            getSession().getTransaction().rollback();
+        }
+    }
 
-	public T recuperarPorId(Serializable id) {
-		iniciarTransaccion();
-		try {
-			T result = getSession().get(clase, id);
-			getSession().getTransaction().commit();
-			return result;
-		} catch (Exception e) {
-			getSession().getTransaction().rollback();
-			throw e;
-		}
-	}
+    // Guarda o actualiza una entidad.
+    public void guardar(T entity) throws Exception {
+        iniciarTransaccion();
 
-	// CORREGIDO: antes ordenaba por "id", que no existe en tus entidades.
-	// Si queres orden, sobrescribilo en el DAO especifico.
-	public List<T> recuperarTodo() {
-		iniciarTransaccion();
-		try {
-			Query<T> query = getSession().createQuery("from " + clase.getName(), clase);
-			List<T> lista = query.getResultList();
-			getSession().getTransaction().commit();
-			return lista;
-		} catch (Exception e) {
-			getSession().getTransaction().rollback();
-			throw e;
-		}
-	}
+        try {
+            getSession().saveOrUpdate(entity);
+            getSession().getTransaction().commit();
 
-	public abstract List<T> recuperarPorFiltro(String filtro);
+        } catch (Exception e) {
+            rollbackTransaccion();
+            System.out.println("Generic DAO - Guardar - ERROR");
+            throw e;
+        }
+    }
+
+    // Elimina una entidad.
+    public void eliminar(T entity) throws Exception {
+        iniciarTransaccion();
+
+        try {
+            Object aEliminar = getSession().contains(entity)
+                    ? entity
+                    : getSession().merge(entity);
+
+            getSession().remove(aEliminar);
+            getSession().getTransaction().commit();
+
+        } catch (Exception e) {
+            rollbackTransaccion();
+            System.out.println("Generic DAO - Eliminar - ERROR");
+            throw e;
+        }
+    }
+
+    // Recupera una entidad por su identificador.
+    public T recuperarPorId(Serializable id) {
+        iniciarTransaccion();
+
+        try {
+            T result = getSession().get(clase, id);
+            getSession().getTransaction().commit();
+            return result;
+
+        } catch (Exception e) {
+            rollbackTransaccion();
+            throw e;
+        }
+    }
+
+    // Recupera todas las entidades.
+    public List<T> recuperarTodo() {
+        iniciarTransaccion();
+
+        try {
+            Query<T> query = getSession().createQuery(
+                    "from " + clase.getSimpleName(), clase);
+
+            List<T> lista = query.getResultList();
+
+            getSession().getTransaction().commit();
+            return lista;
+
+        } catch (Exception e) {
+            rollbackTransaccion();
+            throw e;
+        }
+    }
+
+    public abstract List<T> recuperarPorFiltro(String filtro);
 }

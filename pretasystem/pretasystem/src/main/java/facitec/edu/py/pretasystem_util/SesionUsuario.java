@@ -6,6 +6,9 @@ import facitec.edu.py.pretasystem_entidades.Usuario;
 public class SesionUsuario {
 	private static Usuario usuario;
 
+	// nombre del usuario administrador (poné el que usás vos para entrar)
+	public static final String ADMIN = "admin";
+
 	public static Usuario getUsuario() {
 		return usuario;
 	}
@@ -16,5 +19,9 @@ public class SesionUsuario {
 
 	public static void cerrarSesion() {
 		usuario = null;
+	}
+
+	public static boolean esAdministrador() {
+		return usuario != null && ADMIN.equalsIgnoreCase(usuario.getUsuario());
 	}
 }
