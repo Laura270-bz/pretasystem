@@ -1,33 +1,46 @@
-
 package facitec.edu.py.pretasystem_abms;
 
+import java.awt.BasicStroke;
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.awt.GradientPaint;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Insets;
+import java.awt.RenderingHints;
 import java.sql.Date;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
 import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerDateModel;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.border.LineBorder;
+import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 import facitec.edu.py.pretasystem_dao.Categoria_Producto_Dao;
@@ -37,735 +50,942 @@ import facitec.edu.py.pretasystem_entidades.Categoria_Producto;
 import facitec.edu.py.pretasystem_entidades.Orden_Produccion;
 import facitec.edu.py.pretasystem_entidades.Producto_Terminado;
 import facitec.edu.py.pretasystem_util.FormatoUtil;
+import facitec.edu.py.pretasystem_util.Iconos;
 
+/**
+ * ABM de Producto Terminado con el mismo diseño de la pantalla principal.
+ */
 public class ProductoTerminadoVentana extends JFrame {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    private JTextField txtNombre;
-    private JTextField txtColor;
+	private static final Color ROSA_FUERTE = new Color(236, 64, 122);
+	private static final Color ROSA_OSCURO = new Color(173, 20, 87);
+	private static final Color ROSA_MEDIO = new Color(244, 143, 177);
+	private static final Color ROSA_CLARO = new Color(252, 228, 236);
 
-    private JComboBox<Categoria_Producto> cmbCategoria;
-    private JComboBox<Orden_Produccion> cmbOrden;
+	private static final Font FUENTE_LABEL = new Font("Segoe UI", Font.BOLD, 13);
+	private static final Font FUENTE_CAMPO = new Font("Segoe UI", Font.PLAIN, 14);
 
-    private JLabel lblInfoOrden;
-    private JLabel lblStockActual;
+	private JTextField txtNombre;
+	private JTextField txtColor;
 
-    private JSpinner spnProducido;
-    private JSpinner spnFecha;
-    private JSpinner spnStockActual;
-    private JSpinner spnStockMinimo;
-    private JSpinner spnPrecioMinorista;
-    private JSpinner spnPrecioMayorista;
+	private JComboBox<Categoria_Producto> cmbCategoria;
+	private JComboBox<Orden_Produccion> cmbOrden;
 
-    private JTextField txtBuscar;
+	private JLabel lblInfoOrden;
+	private JLabel lblStockActual;
 
-    private JTable table;
-    private DefaultTableModel modelo;
+	private JSpinner spnProducido;
+	private JSpinner spnFecha;
+	private JSpinner spnStockActual;
+	private JSpinner spnStockMinimo;
+	private JSpinner spnPrecioMinorista;
+	private JSpinner spnPrecioMayorista;
 
-    private final Producto_Terminado_Dao dao = new Producto_Terminado_Dao();
-    private final Categoria_Producto_Dao categoriaDao = new Categoria_Producto_Dao();
-    private final Orden_Produccion_Dao ordenDao = new Orden_Produccion_Dao();
+	private JTextField txtBuscar;
 
-    private Producto_Terminado seleccionado = null;
+	private JTable table;
+	private DefaultTableModel modelo;
 
-    private boolean modoEdicion = false;
+	private final Producto_Terminado_Dao dao = new Producto_Terminado_Dao();
+	private final Categoria_Producto_Dao categoriaDao = new Categoria_Producto_Dao();
+	private final Orden_Produccion_Dao ordenDao = new Orden_Produccion_Dao();
 
-    public static void main(String[] args) {
-        EventQueue.invokeLater(() -> {
-            try {
-                new ProductoTerminadoVentana().setVisible(true);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-    }
+	private Producto_Terminado seleccionado = null;
 
-    public ProductoTerminadoVentana() {
+	private boolean modoEdicion = false;
 
-        setTitle("ABM - Producto Terminado");
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setBounds(100, 100, 1250, 680);
-        setLocationRelativeTo(null);
-        getContentPane().setLayout(null);
+	public static void main(String[] args) {
+		EventQueue.invokeLater(() -> {
+			try {
+				new ProductoTerminadoVentana().setVisible(true);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
+	}
 
-        // ---------- FORMULARIO ----------
+	public ProductoTerminadoVentana() {
 
-        JPanel panel = new JPanel();
-        panel.setBorder(new LineBorder(Color.BLACK));
-        panel.setBounds(10, 10, 300, 623);
-        panel.setLayout(null);
-        getContentPane().add(panel);
+		setTitle("ABM - Producto Terminado");
+		setIconImage(Iconos.imagen("caja", 64, ROSA_FUERTE));
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        txtNombre = campoTexto(panel, "Nombre:", 10);
-        txtColor = campoTexto(panel, "Color:", 65);
+		// Sin opción de maximizar ni de cambiar el tamaño.
+		setResizable(false);
 
-        JLabel lblCat = new JLabel("Categoria:");
-        lblCat.setBounds(10, 120, 200, 14);
-        panel.add(lblCat);
+		setSize(1300, 740);
+		setLocationRelativeTo(null);
 
-        cmbCategoria = new JComboBox<>();
-        cmbCategoria.setBounds(10, 140, 280, 24);
+		setContentPane(new FondoPanel());
+		getContentPane().setLayout(new BorderLayout());
 
-        cmbCategoria.setRenderer(new DefaultListCellRenderer() {
-            private static final long serialVersionUID = 1L;
+		getContentPane().add(crearEncabezado(), BorderLayout.NORTH);
+		getContentPane().add(crearCuerpo(), BorderLayout.CENTER);
 
-            @Override
-            public Component getListCellRendererComponent(
-                    JList<?> l, Object v, int i, boolean s, boolean f) {
+		cargarCombos();
+		cargarTabla();
+	}
 
-                super.getListCellRendererComponent(l, v, i, s, f);
+	// ====================== DISEÑO ======================
 
-                setText(v instanceof Categoria_Producto
-                        ? ((Categoria_Producto) v).getNombre_categoria()
-                        : "");
+	private JPanel crearEncabezado() {
 
-                return this;
-            }
-        });
+		JPanel p = new JPanel(new GridLayout(2, 1));
+		p.setOpaque(false);
+		p.setBorder(BorderFactory.createEmptyBorder(18, 30, 4, 30));
 
-        panel.add(cmbCategoria);
+		JLabel titulo = new JLabel("Producto Terminado");
+		titulo.setFont(new Font("Segoe UI", Font.BOLD, 30));
+		titulo.setForeground(ROSA_OSCURO);
 
-        // ---------- ORDEN DE PRODUCCION ----------
+		JLabel sub = new JLabel("Registro de productos, producción y stock");
+		sub.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+		sub.setForeground(new Color(150, 80, 110));
 
-        JLabel lblOrden = new JLabel("Orden de produccion:");
-        lblOrden.setBounds(10, 175, 200, 14);
-        panel.add(lblOrden);
+		p.add(titulo);
+		p.add(sub);
 
-        cmbOrden = new JComboBox<>();
-        cmbOrden.setBounds(10, 195, 280, 24);
+		return p;
+	}
 
-        cmbOrden.setRenderer(new DefaultListCellRenderer() {
-            private static final long serialVersionUID = 1L;
+	private JPanel crearCuerpo() {
 
-            @Override
-            public Component getListCellRendererComponent(
-                    JList<?> l, Object v, int i, boolean s, boolean f) {
+		JPanel cuerpo = new JPanel(new BorderLayout(20, 0));
+		cuerpo.setOpaque(false);
+		cuerpo.setBorder(BorderFactory.createEmptyBorder(10, 30, 25, 30));
 
-                super.getListCellRendererComponent(l, v, i, s, f);
+		cuerpo.add(crearFormulario(), BorderLayout.WEST);
+		cuerpo.add(crearPanelTabla(), BorderLayout.CENTER);
 
-                if (v instanceof Orden_Produccion) {
-                    Orden_Produccion o = (Orden_Produccion) v;
+		return cuerpo;
+	}
 
-                    setText("Orden N° " + o.getId_orden_produccion()
-                            + " - " + o.getEtapa_actual()
-                            + " - pendiente: " + FormatoUtil.miles(o.getPendiente()));
+	private JPanel crearFormulario() {
 
-                } else {
-                    setText("(Sin orden)");
-                }
+		TarjetaPanel card = new TarjetaPanel();
+		card.setLayout(new GridBagLayout());
+		card.setPreferredSize(new Dimension(390, 0));
+		card.setBorder(BorderFactory.createEmptyBorder(18, 22, 18, 22));
 
-                return this;
-            }
-        });
+		// Título del formulario (ocupa las dos columnas).
+		JLabel lblForm = new JLabel("Datos del producto");
+		lblForm.setFont(new Font("Segoe UI", Font.BOLD, 17));
+		lblForm.setForeground(ROSA_OSCURO);
 
-        cmbOrden.addActionListener(e -> actualizarInfoOrden());
-        panel.add(cmbOrden);
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridx = 0;
+		c.gridy = 0;
+		c.gridwidth = 2;
+		c.weightx = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.insets = new Insets(0, 0, 10, 0);
+		card.add(lblForm, c);
 
-        lblInfoOrden = new JLabel(" ");
-        lblInfoOrden.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        lblInfoOrden.setForeground(new Color(173, 20, 87));
-        lblInfoOrden.setBounds(10, 222, 285, 18);
-        panel.add(lblInfoOrden);
+		// Fila 0: nombre | color
+		txtNombre = new JTextField();
+		estilizarCampo(txtNombre);
+		txtColor = new JTextField();
+		estilizarCampo(txtColor);
 
-        spnProducido = campoNumeroEn(
-                panel, "Producido ahora (se suma al stock):", 10, 250, 280, 1);
+		addCampo(card, etiqueta("Nombre"), txtNombre, 0, 0, 1);
+		addCampo(card, etiqueta("Color"), txtColor, 1, 0, 1);
 
-        JLabel lblFecha = new JLabel("Fecha de produccion:");
-        lblFecha.setBounds(10, 305, 200, 14);
-        panel.add(lblFecha);
+		// Fila 1: categoría
+		cmbCategoria = new JComboBox<>();
+		estilizarCombo(cmbCategoria);
+		cmbCategoria.setRenderer(new DefaultListCellRenderer() {
+			private static final long serialVersionUID = 1L;
 
-        spnFecha = new JSpinner(new SpinnerDateModel());
-        spnFecha.setEditor(new JSpinner.DateEditor(spnFecha, "dd/MM/yyyy"));
-        spnFecha.setBounds(10, 325, 280, 24);
-        panel.add(spnFecha);
+			@Override
+			public Component getListCellRendererComponent(JList<?> l, Object v, int i, boolean s, boolean f) {
 
-        // ---------- STOCK ----------
+				super.getListCellRendererComponent(l, v, i, s, f);
 
-        lblStockActual = new JLabel("Stock inicial:");
-        lblStockActual.setBounds(10, 360, 135, 14);
-        panel.add(lblStockActual);
+				setText(v instanceof Categoria_Producto ? ((Categoria_Producto) v).getNombre_categoria() : "");
 
-        spnStockActual = new JSpinner(
-                new SpinnerNumberModel(0, 0, 999999999, 1));
+				return this;
+			}
+		});
 
-        FormatoUtil.aplicarMiles(spnStockActual);
-        spnStockActual.setBounds(10, 380, 135, 24);
-        panel.add(spnStockActual);
+		addCampo(card, etiqueta("Categoría"), cmbCategoria, 0, 1, 2);
 
-        spnStockMinimo = campoNumeroEn(
-                panel, "Stock minimo:", 155, 360, 135, 1);
+		// Fila 2: orden de producción + información de la orden
+		cmbOrden = new JComboBox<>();
+		estilizarCombo(cmbOrden);
+		cmbOrden.setRenderer(new DefaultListCellRenderer() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Component getListCellRendererComponent(JList<?> l, Object v, int i, boolean s, boolean f) {
+
+				super.getListCellRendererComponent(l, v, i, s, f);
+
+				if (v instanceof Orden_Produccion) {
+					Orden_Produccion o = (Orden_Produccion) v;
+
+					setText("Orden N° " + o.getId_orden_produccion() + " - " + o.getEtapa_actual() + " - pendiente: "
+							+ FormatoUtil.miles(o.getPendiente()));
+
+				} else {
+					setText("(Sin orden)");
+				}
+
+				return this;
+			}
+		});
+
+		cmbOrden.addActionListener(e -> actualizarInfoOrden());
+
+		lblInfoOrden = new JLabel(" ");
+		lblInfoOrden.setFont(new Font("Segoe UI", Font.BOLD, 11));
+		lblInfoOrden.setForeground(ROSA_OSCURO);
+
+		JPanel panelOrden = new JPanel(new BorderLayout(0, 3));
+		panelOrden.setOpaque(false);
+		panelOrden.add(cmbOrden, BorderLayout.NORTH);
+		panelOrden.add(lblInfoOrden, BorderLayout.SOUTH);
+
+		addCampo(card, etiqueta("Orden de producción"), panelOrden, 0, 2, 2);
+
+		// Fila 3: producido | fecha
+		spnProducido = campoNumero(1);
+		spnFecha = new JSpinner(new SpinnerDateModel());
+		spnFecha.setEditor(new JSpinner.DateEditor(spnFecha, "dd/MM/yyyy"));
+		estilizarSpinner(spnFecha);
+
+		addCampo(card, etiqueta("Producido ahora"), spnProducido, 0, 3, 1);
+		addCampo(card, etiqueta("Fecha de producción"), spnFecha, 1, 3, 1);
+
+		// Fila 4: stock actual | stock mínimo
+		lblStockActual = etiqueta("Stock inicial");
+		spnStockActual = campoNumero(1);
+		spnStockMinimo = campoNumero(1);
+
+		addCampo(card, lblStockActual, spnStockActual, 0, 4, 1);
+		addCampo(card, etiqueta("Stock mínimo"), spnStockMinimo, 1, 4, 1);
+
+		// Fila 5: precios
+		spnPrecioMinorista = campoNumero(1000);
+		spnPrecioMayorista = campoNumero(1000);
+
+		addCampo(card, etiqueta("Precio minorista"), spnPrecioMinorista, 0, 5, 1);
+		addCampo(card, etiqueta("Precio mayorista"), spnPrecioMayorista, 1, 5, 1);
 
-        spnPrecioMinorista = campoNumeroEn(
-                panel, "Precio minorista:", 10, 415, 135, 1000);
+		// ---------- BOTONES ----------
+
+		JPanel botones = new JPanel(new GridLayout(2, 2, 10, 10));
+		botones.setOpaque(false);
+
+		BotonRosa btnGuardar = new BotonRosa("Guardar", true);
+		btnGuardar.addActionListener(e -> guardar());
+		botones.add(btnGuardar);
+
+		BotonRosa btnEditar = new BotonRosa("Editar", true);
+		btnEditar.addActionListener(e -> editar());
+		botones.add(btnEditar);
+
+		BotonRosa btnEliminar = new BotonRosa("Eliminar", true);
+		btnEliminar.addActionListener(e -> eliminar());
+		botones.add(btnEliminar);
+
+		BotonRosa btnCancelar = new BotonRosa("Cancelar", false);
+		btnCancelar.addActionListener(e -> limpiar());
+		botones.add(btnCancelar);
+
+		c = new GridBagConstraints();
+		c.gridx = 0;
+		c.gridy = 13;
+		c.gridwidth = 2;
+		c.weightx = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.insets = new Insets(8, 0, 10, 0);
+		card.add(botones, c);
 
-        spnPrecioMayorista = campoNumeroEn(
-                panel, "Precio mayorista:", 155, 415, 135, 1000);
+		BotonRosa btnSalir = new BotonRosa("Salir", false);
+		btnSalir.addActionListener(e -> salir());
+		c.gridy = 14;
+		c.insets = new Insets(0, 0, 0, 0);
+		card.add(btnSalir, c);
+
+		// Empuja todo hacia arriba.
+		c.gridy = 15;
+		c.weighty = 1;
+		c.fill = GridBagConstraints.BOTH;
+		JPanel relleno = new JPanel();
+		relleno.setOpaque(false);
+		card.add(relleno, c);
+
+		return card;
+	}
 
-        // ---------- BOTONES ----------
+	/**
+	 * Agrega una etiqueta y su componente en la cuadrícula del formulario. Cada
+	 * "fila" usa dos filas de la grilla (etiqueta arriba, campo abajo).
+	 */
+	private void addCampo(JPanel card, JLabel lbl, JComponent comp, int col, int fila, int span) {
+
+		boolean izquierda = (col == 0 && span == 1);
+
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridx = col;
+		c.gridwidth = span;
+		c.weightx = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.anchor = GridBagConstraints.NORTHWEST;
+
+		c.gridy = 1 + fila * 2;
+		c.insets = new Insets(0, 0, 3, izquierda ? 10 : 0);
+		card.add(lbl, c);
+
+		c.gridy = 2 + fila * 2;
+		c.insets = new Insets(0, 0, 12, izquierda ? 10 : 0);
+		card.add(comp, c);
+	}
+
+	private JPanel crearPanelTabla() {
+
+		TarjetaPanel card = new TarjetaPanel();
+		card.setLayout(new BorderLayout(0, 12));
+		card.setBorder(BorderFactory.createEmptyBorder(18, 18, 18, 18));
+
+		// ---------- BUSCADOR ----------
+
+		JPanel buscador = new JPanel(new BorderLayout(10, 0));
+		buscador.setOpaque(false);
+
+		JLabel lblBuscar = new JLabel("Buscar:");
+		lblBuscar.setFont(FUENTE_LABEL);
+		lblBuscar.setForeground(ROSA_OSCURO);
+		buscador.add(lblBuscar, BorderLayout.WEST);
+
+		txtBuscar = new JTextField();
+		estilizarCampo(txtBuscar);
+		buscador.add(txtBuscar, BorderLayout.CENTER);
 
-        JSeparator sep = new JSeparator();
-        sep.setBounds(10, 475, 280, 6);
-        panel.add(sep);
+		JLabel lblIconoBuscar = new JLabel("\uD83D\uDD0D");
+		lblIconoBuscar.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18));
+		buscador.add(lblIconoBuscar, BorderLayout.EAST);
 
-        JButton btnGuardar = new JButton("Guardar");
-        btnGuardar.setBounds(10, 495, 130, 32);
-        btnGuardar.addActionListener(e -> guardar());
-        panel.add(btnGuardar);
+		txtBuscar.getDocument().addDocumentListener(new DocumentListener() {
 
-        JButton btnEditar = new JButton("Editar");
-        btnEditar.setBounds(160, 495, 130, 32);
-        btnEditar.addActionListener(e -> editar());
-        panel.add(btnEditar);
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				cargarTabla();
+			}
 
-        JButton btnEliminar = new JButton("Eliminar");
-        btnEliminar.setBounds(10, 540, 130, 32);
-        btnEliminar.addActionListener(e -> eliminar());
-        panel.add(btnEliminar);
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				cargarTabla();
+			}
 
-        JButton btnSalir = new JButton("Salir");
-        btnSalir.setBounds(160, 540, 130, 32);
-        btnSalir.addActionListener(e -> salir());
-        panel.add(btnSalir);
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				cargarTabla();
+			}
+		});
 
-        JButton btnCancelar = new JButton("Cancelar");
-        btnCancelar.setBounds(95, 580, 110, 32);
-        btnCancelar.addActionListener(e -> limpiar());
-        panel.add(btnCancelar);
+		card.add(buscador, BorderLayout.NORTH);
 
-        // ---------- BUSCADOR ----------
+		// ---------- TABLA ----------
 
-        JLabel lblBuscar = new JLabel("Buscar:");
-        lblBuscar.setBounds(330, 18, 50, 22);
-        getContentPane().add(lblBuscar);
+		modelo = new DefaultTableModel(new Object[] { "ID", "Nombre", "Color", "Categoría", "Orden", "Estimada",
+				"Producida", "Pendiente", "Stock", "Mínimo", "P. Minorista", "P. Mayorista" }, 0) {
 
-        txtBuscar = new JTextField();
-        txtBuscar.setBounds(385, 18, 300, 22);
-        getContentPane().add(txtBuscar);
+			private static final long serialVersionUID = 1L;
 
-        JLabel lblIconoBuscar = new JLabel("\uD83D\uDD0D");
-        lblIconoBuscar.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18));
-        lblIconoBuscar.setBounds(690, 15, 30, 25);
-        getContentPane().add(lblIconoBuscar);
+			@Override
+			public boolean isCellEditable(int r, int c) {
+				return false;
+			}
+		};
 
-        txtBuscar.getDocument().addDocumentListener(new DocumentListener() {
+		table = new JTable(modelo);
+		table.setFont(FUENTE_CAMPO);
+		table.setRowHeight(28);
+		table.setShowVerticalLines(false);
+		table.setGridColor(ROSA_CLARO);
+		table.setSelectionBackground(ROSA_MEDIO);
+		table.setSelectionForeground(Color.WHITE);
+		table.setFillsViewportHeight(true);
+		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                cargarTabla();
-            }
+		DefaultTableCellRenderer header = new DefaultTableCellRenderer() {
 
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                cargarTabla();
-            }
+			private static final long serialVersionUID = 1L;
 
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                cargarTabla();
-            }
-        });
+			@Override
+			public Component getTableCellRendererComponent(JTable t, Object v, boolean sel, boolean foc, int r,
+					int col) {
 
-        // ---------- TABLA ----------
+				JLabel l = (JLabel) super.getTableCellRendererComponent(t, v, sel, foc, r, col);
 
-        modelo = new DefaultTableModel(new Object[] {
-                "ID", "Nombre", "Color", "Categoria", "Orden",
-                "Estimada", "Producida", "Pendiente", "Stock",
-                "Minimo", "P. Minorista", "P. Mayorista"
-        }, 0) {
+				l.setBackground(ROSA_FUERTE);
+				l.setForeground(Color.WHITE);
+				l.setFont(new Font("Segoe UI", Font.BOLD, 12));
+				l.setHorizontalAlignment(SwingConstants.CENTER);
+				l.setBorder(BorderFactory.createEmptyBorder(6, 4, 6, 4));
+				l.setOpaque(true);
 
-            private static final long serialVersionUID = 1L;
+				return l;
+			}
+		};
 
-            @Override
-            public boolean isCellEditable(int r, int c) {
-                return false;
-            }
-        };
+		table.getTableHeader().setDefaultRenderer(header);
+		table.getTableHeader().setReorderingAllowed(false);
+		table.getTableHeader().setPreferredSize(new Dimension(0, 34));
 
-        table = new JTable(modelo);
+		for (int col = 5; col <= 11; col++) {
+			table.getColumnModel().getColumn(col).setCellRenderer(FormatoUtil.rendererMiles());
+		}
 
-        for (int col = 5; col <= 11; col++) {
-            table.getColumnModel().getColumn(col)
-                    .setCellRenderer(FormatoUtil.rendererMiles());
-        }
+		int[] anchos = { 35, 120, 70, 90, 55, 70, 70, 70, 60, 60, 85, 85 };
+		for (int i = 0; i < anchos.length; i++) {
+			table.getColumnModel().getColumn(i).setPreferredWidth(anchos[i]);
+		}
 
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		table.getSelectionModel().addListSelectionListener(e -> {
+			if (!e.getValueIsAdjusting()) {
+				seleccionarRegistro();
+			}
+		});
 
-        table.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                seleccionarRegistro();
-            }
-        });
+		JScrollPane sp = new JScrollPane(table);
+		sp.setBorder(BorderFactory.createLineBorder(ROSA_MEDIO));
+		sp.getViewport().setBackground(Color.WHITE);
 
-        JScrollPane sp = new JScrollPane(table);
-        sp.setBounds(330, 55, 895, 578);
-        getContentPane().add(sp);
+		card.add(sp, BorderLayout.CENTER);
 
-        cargarCombos();
-        cargarTabla();
-    }
+		return card;
+	}
 
-    // ---------- CONSTRUCCION DE CAMPOS ----------
+	// ---------- ESTILOS ----------
 
-    private JTextField campoTexto(JPanel p, String etiqueta, int y) {
+	private JLabel etiqueta(String texto) {
 
-        JLabel l = new JLabel(etiqueta);
-        l.setBounds(10, y, 200, 14);
-        p.add(l);
+		JLabel l = new JLabel(texto);
+		l.setFont(FUENTE_LABEL);
+		l.setForeground(ROSA_OSCURO);
 
-        JTextField t = new JTextField();
-        t.setBounds(10, y + 20, 280, 24);
-        p.add(t);
+		return l;
+	}
 
-        return t;
-    }
+	private void estilizarCampo(JTextField t) {
 
-    private JSpinner campoNumeroEn(
-            JPanel p, String etiqueta, int x, int y, int ancho, int paso) {
+		t.setFont(FUENTE_CAMPO);
+		t.setPreferredSize(new Dimension(100, 32));
+		t.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(ROSA_MEDIO),
+				BorderFactory.createEmptyBorder(2, 8, 2, 8)));
+	}
 
-        JLabel l = new JLabel(etiqueta);
-        l.setBounds(x, y, ancho, 14);
-        p.add(l);
+	private void estilizarSpinner(JSpinner s) {
 
-        JSpinner s = new JSpinner(
-                new SpinnerNumberModel(0, 0, 999999999, paso));
+		s.setFont(FUENTE_CAMPO);
+		s.setPreferredSize(new Dimension(100, 32));
+		s.setBorder(BorderFactory.createLineBorder(ROSA_MEDIO));
+	}
 
-        FormatoUtil.aplicarMiles(s);
+	private void estilizarCombo(JComboBox<?> c) {
 
-        s.setBounds(x, y + 20, ancho, 24);
-        p.add(s);
+		c.setFont(FUENTE_CAMPO);
+		c.setBackground(Color.WHITE);
+		c.setPreferredSize(new Dimension(100, 32));
+	}
 
-        return s;
-    }
+	private JSpinner campoNumero(int paso) {
 
-    // ---------- CARGA DE DATOS ----------
+		JSpinner s = new JSpinner(new SpinnerNumberModel(0, 0, 999999999, paso));
+		FormatoUtil.aplicarMiles(s);
+		estilizarSpinner(s);
 
-    private void cargarCombos() {
+		return s;
+	}
 
-        List<Categoria_Producto> cats =
-                categoriaDao.recuperarPorFiltro("");
+	// ====================== CARGA DE DATOS ======================
 
-        cmbCategoria.setModel(
-                new DefaultComboBoxModel<>(cats.toArray(new Categoria_Producto[0])));
+	private void cargarCombos() {
 
-        cargarOrdenes(null);
-    }
+		List<Categoria_Producto> cats = categoriaDao.recuperarPorFiltro("");
 
-    private void cargarOrdenes(Orden_Produccion incluir) {
+		cmbCategoria.setModel(new DefaultComboBoxModel<>(cats.toArray(new Categoria_Producto[0])));
 
-        List<Orden_Produccion> lista = ordenDao.recuperarPendientes();
+		cargarOrdenes(null);
+	}
 
-        DefaultComboBoxModel<Orden_Produccion> m =
-                new DefaultComboBoxModel<>();
+	private void cargarOrdenes(Orden_Produccion incluir) {
 
-        m.addElement(null);
+		List<Orden_Produccion> lista = ordenDao.recuperarPendientes();
 
-        boolean incluida = (incluir == null);
+		DefaultComboBoxModel<Orden_Produccion> m = new DefaultComboBoxModel<>();
 
-        for (Orden_Produccion o : lista) {
+		m.addElement(null);
 
-            m.addElement(o);
+		boolean incluida = (incluir == null);
 
-            if (incluir != null
-                    && o.getId_orden_produccion()
-                    == incluir.getId_orden_produccion()) {
+		for (Orden_Produccion o : lista) {
 
-                incluida = true;
-            }
-        }
+			m.addElement(o);
 
-        if (!incluida) {
-            m.addElement(incluir);
-        }
+			if (incluir != null && o.getId_orden_produccion() == incluir.getId_orden_produccion()) {
 
-        cmbOrden.setModel(m);
-        actualizarInfoOrden();
-    }
+				incluida = true;
+			}
+		}
 
-    private void actualizarInfoOrden() {
+		if (!incluida) {
+			m.addElement(incluir);
+		}
 
-        if (lblInfoOrden == null || spnProducido == null) {
-            return;
-        }
+		cmbOrden.setModel(m);
+		actualizarInfoOrden();
+	}
 
-        Orden_Produccion o =
-                (Orden_Produccion) cmbOrden.getSelectedItem();
+	private void actualizarInfoOrden() {
 
-        SpinnerNumberModel m =
-                (SpinnerNumberModel) spnProducido.getModel();
+		if (lblInfoOrden == null || spnProducido == null) {
+			return;
+		}
 
-        if (o == null) {
+		Orden_Produccion o = (Orden_Produccion) cmbOrden.getSelectedItem();
 
-            lblInfoOrden.setText("Sin orden: no se registra produccion");
+		SpinnerNumberModel m = (SpinnerNumberModel) spnProducido.getModel();
 
-            m.setMaximum(0);
-            spnProducido.setValue(0);
-            spnProducido.setEnabled(false);
+		if (o == null) {
 
-        } else {
+			lblInfoOrden.setText("Sin orden: no se registra producción");
 
-            int pendiente = Math.max(0, o.getPendiente());
+			m.setMaximum(0);
+			spnProducido.setValue(0);
+			spnProducido.setEnabled(false);
 
-            lblInfoOrden.setText(
-                    "Estimada: " + FormatoUtil.miles(o.getCantidad_estimada())
-                    + " | Producida: " + FormatoUtil.miles(o.getProducida())
-                    + " | Pendiente: " + FormatoUtil.miles(pendiente));
+		} else {
 
-            m.setMaximum(pendiente);
+			int pendiente = Math.max(0, o.getPendiente());
 
-            if (((Number) spnProducido.getValue()).intValue() > pendiente) {
-                spnProducido.setValue(0);
-            }
+			lblInfoOrden.setText("Estimada: " + FormatoUtil.miles(o.getCantidad_estimada()) + " | Producida: "
+					+ FormatoUtil.miles(o.getProducida()) + " | Pendiente: " + FormatoUtil.miles(pendiente));
 
-            spnProducido.setEnabled(pendiente > 0);
-        }
-    }
+			m.setMaximum(pendiente);
 
-    private void seleccionarOrden(Orden_Produccion o) {
+			if (((Number) spnProducido.getValue()).intValue() > pendiente) {
+				spnProducido.setValue(0);
+			}
 
-        if (o == null) {
-            cmbOrden.setSelectedIndex(0);
-            return;
-        }
+			spnProducido.setEnabled(pendiente > 0);
+		}
+	}
 
-        for (int i = 1; i < cmbOrden.getItemCount(); i++) {
+	private void seleccionarOrden(Orden_Produccion o) {
 
-            Orden_Produccion item = cmbOrden.getItemAt(i);
+		if (o == null) {
+			cmbOrden.setSelectedIndex(0);
+			return;
+		}
 
-            if (item != null
-                    && item.getId_orden_produccion()
-                    == o.getId_orden_produccion()) {
+		for (int i = 1; i < cmbOrden.getItemCount(); i++) {
 
-                cmbOrden.setSelectedIndex(i);
-                return;
-            }
-        }
+			Orden_Produccion item = cmbOrden.getItemAt(i);
 
-        cmbOrden.setSelectedIndex(0);
-    }
+			if (item != null && item.getId_orden_produccion() == o.getId_orden_produccion()) {
 
-    // ---------- TABLA ----------
+				cmbOrden.setSelectedIndex(i);
+				return;
+			}
+		}
 
-    private void cargarTabla() {
+		cmbOrden.setSelectedIndex(0);
+	}
 
-        String filtro = txtBuscar == null
-                ? ""
-                : txtBuscar.getText().trim();
+	// ====================== TABLA ======================
 
-        modelo.setRowCount(0);
+	private void cargarTabla() {
 
-        List<Producto_Terminado> productos =
-                dao.recuperarPorFiltro(filtro);
+		String filtro = txtBuscar == null ? "" : txtBuscar.getText().trim();
 
-        for (Producto_Terminado p : productos) {
+		modelo.setRowCount(0);
 
-            Orden_Produccion o = p.getOrden_produccion();
+		List<Producto_Terminado> productos = dao.recuperarPorFiltro(filtro);
 
-            String categoria = p.getCategoria_producto() == null
-                    ? "-"
-                    : p.getCategoria_producto().getNombre_categoria();
+		for (Producto_Terminado p : productos) {
 
-            modelo.addRow(new Object[] {
-                    p.getId_producto_terminado(),
-                    p.getNombre(),
-                    p.getColor(),
-                    categoria,
-                    o == null ? "-" : "N° " + o.getId_orden_produccion(),
-                    o == null ? "-" : o.getCantidad_estimada(),
-                    o == null ? "-" : o.getProducida(),
-                    o == null ? "-" : o.getPendiente(),
-                    p.getStock_actual(),
-                    p.getStock_minimo(),
-                    p.getPrecio_minorista(),
-                    p.getPrecio_mayorista()
-            });
-        }
-    }
+			Orden_Produccion o = p.getOrden_produccion();
 
-    private void seleccionarRegistro() {
+			String categoria = p.getCategoria_producto() == null ? "-"
+					: p.getCategoria_producto().getNombre_categoria();
 
-        int fila = table.getSelectedRow();
+			modelo.addRow(new Object[] { p.getId_producto_terminado(), p.getNombre(), p.getColor(), categoria,
+					o == null ? "-" : "N° " + o.getId_orden_produccion(), o == null ? "-" : o.getCantidad_estimada(),
+					o == null ? "-" : o.getProducida(), o == null ? "-" : o.getPendiente(), p.getStock_actual(),
+					p.getStock_minimo(), p.getPrecio_minorista(), p.getPrecio_mayorista() });
+		}
+	}
 
-        if (fila < 0) {
-            seleccionado = null;
-            return;
-        }
+	private void seleccionarRegistro() {
 
-        int id = ((Number) modelo.getValueAt(fila, 0)).intValue();
+		int fila = table.getSelectedRow();
 
-        seleccionado = dao.recuperarPorId(id);
-    }
+		if (fila < 0) {
+			seleccionado = null;
+			return;
+		}
 
-    // ---------- EDITAR ----------
+		int id = ((Number) modelo.getValueAt(fila, 0)).intValue();
 
-    private void editar() {
+		seleccionado = dao.recuperarPorId(id);
+	}
 
-        if (table.getSelectedRow() < 0 || seleccionado == null) {
+	// ====================== EDITAR ======================
 
-            JOptionPane.showMessageDialog(
-                    this, "Seleccione un producto de la tabla para editar");
+	private void editar() {
 
-            return;
-        }
+		if (table.getSelectedRow() < 0 || seleccionado == null) {
 
-        modoEdicion = true;
+			JOptionPane.showMessageDialog(this, "Seleccione un producto de la tabla para editar");
 
-        cargarFormularioDesdeTabla();
+			return;
+		}
 
-        JOptionPane.showMessageDialog(
-                this, "Puede modificar los datos del producto seleccionado");
-    }
+		modoEdicion = true;
 
-    private void cargarFormularioDesdeTabla() {
+		cargarFormularioDesdeTabla();
 
-        if (seleccionado == null) {
-            return;
-        }
+		JOptionPane.showMessageDialog(this, "Puede modificar los datos del producto seleccionado");
+	}
 
-        txtNombre.setText(seleccionado.getNombre());
-        txtColor.setText(seleccionado.getColor());
+	private void cargarFormularioDesdeTabla() {
 
-        // El stock actual se muestra, pero no se puede modificar.
-        lblStockActual.setText("Stock actual (solo consulta):");
-        spnStockActual.setValue(seleccionado.getStock_actual());
-        spnStockActual.setEnabled(false);
+		if (seleccionado == null) {
+			return;
+		}
 
-        spnStockMinimo.setValue(seleccionado.getStock_minimo());
-        spnPrecioMinorista.setValue(seleccionado.getPrecio_minorista());
-        spnPrecioMayorista.setValue(seleccionado.getPrecio_mayorista());
+		txtNombre.setText(seleccionado.getNombre());
+		txtColor.setText(seleccionado.getColor());
 
-        // No se registra producción nueva automáticamente.
-        spnProducido.setValue(0);
+		// El stock actual se muestra, pero no se puede modificar.
+		lblStockActual.setText("Stock actual (consulta)");
+		spnStockActual.setValue(seleccionado.getStock_actual());
+		spnStockActual.setEnabled(false);
 
-        if (seleccionado.getCategoria_producto() != null) {
+		spnStockMinimo.setValue(seleccionado.getStock_minimo());
+		spnPrecioMinorista.setValue(seleccionado.getPrecio_minorista());
+		spnPrecioMayorista.setValue(seleccionado.getPrecio_mayorista());
 
-            int idCategoria =
-                    seleccionado.getCategoria_producto().getId_categoria_producto();
+		// No se registra producción nueva automáticamente.
+		spnProducido.setValue(0);
 
-            for (int i = 0; i < cmbCategoria.getItemCount(); i++) {
+		if (seleccionado.getCategoria_producto() != null) {
 
-                Categoria_Producto cat = cmbCategoria.getItemAt(i);
+			int idCategoria = seleccionado.getCategoria_producto().getId_categoria_producto();
 
-                if (cat.getId_categoria_producto() == idCategoria) {
-                    cmbCategoria.setSelectedIndex(i);
-                    break;
-                }
-            }
-        }
+			for (int i = 0; i < cmbCategoria.getItemCount(); i++) {
 
-        cargarOrdenes(seleccionado.getOrden_produccion());
-        seleccionarOrden(seleccionado.getOrden_produccion());
-    }
+				Categoria_Producto cat = cmbCategoria.getItemAt(i);
 
-    // ---------- GUARDAR ----------
+				if (cat.getId_categoria_producto() == idCategoria) {
+					cmbCategoria.setSelectedIndex(i);
+					break;
+				}
+			}
+		}
 
-    private void guardar() {
+		cargarOrdenes(seleccionado.getOrden_produccion());
+		seleccionarOrden(seleccionado.getOrden_produccion());
+	}
 
-        String nombre = txtNombre.getText().trim();
-        String color = txtColor.getText().trim();
+	// ====================== GUARDAR ======================
 
-        if (nombre.isEmpty() || color.isEmpty()) {
+	private void guardar() {
 
-            JOptionPane.showMessageDialog(
-                    this, "Nombre y color son obligatorios");
+		String nombre = txtNombre.getText().trim();
+		String color = txtColor.getText().trim();
 
-            return;
-        }
+		if (nombre.isEmpty() || color.isEmpty()) {
 
-        Categoria_Producto cat =
-                (Categoria_Producto) cmbCategoria.getSelectedItem();
+			JOptionPane.showMessageDialog(this, "Nombre y color son obligatorios");
 
-        if (cat == null) {
+			return;
+		}
 
-            JOptionPane.showMessageDialog(
-                    this, "Primero cargue una categoria (menu Categoria de Producto)");
+		Categoria_Producto cat = (Categoria_Producto) cmbCategoria.getSelectedItem();
 
-            return;
-        }
+		if (cat == null) {
 
-        Orden_Produccion orden =
-                (Orden_Produccion) cmbOrden.getSelectedItem();
+			JOptionPane.showMessageDialog(this, "Primero cargue una categoria (menu Categoria de Producto)");
 
-        int producido = (orden != null && spnProducido.isEnabled())
-                ? ((Number) spnProducido.getValue()).intValue()
-                : 0;
+			return;
+		}
 
-        Date fecha = new Date(
-                ((java.util.Date) spnFecha.getValue()).getTime());
+		Orden_Produccion orden = (Orden_Produccion) cmbOrden.getSelectedItem();
 
-        try {
+		int producido = (orden != null && spnProducido.isEnabled()) ? ((Number) spnProducido.getValue()).intValue()
+				: 0;
 
-            Producto_Terminado p =
-                    modoEdicion ? seleccionado : new Producto_Terminado();
+		Date fecha = new Date(((java.util.Date) spnFecha.getValue()).getTime());
 
-            if (p == null) {
+		try {
 
-                JOptionPane.showMessageDialog(
-                        this, "No se encontro el producto que desea editar");
+			Producto_Terminado p = modoEdicion ? seleccionado : new Producto_Terminado();
 
-                return;
-            }
+			if (p == null) {
 
-            p.setNombre(nombre);
-            p.setColor(color);
-            p.setCategoria_producto(cat);
+				JOptionPane.showMessageDialog(this, "No se encontro el producto que desea editar");
 
-            /*
-             * Al crear:
-             * Se establece el stock inicial.
-             * El DAO debe sumar las unidades producidas a ese valor.
-             *
-             * Al editar:
-             * Se conserva el stock actual recuperado de la base de datos.
-             * El DAO solamente lo incrementará si se registra producción.
-             */
-            if (!modoEdicion) {
+				return;
+			}
 
-                int stockInicial =
-                        ((Number) spnStockActual.getValue()).intValue();
+			p.setNombre(nombre);
+			p.setColor(color);
+			p.setCategoria_producto(cat);
 
-                p.setStock_actual(stockInicial);
-            }
+			/*
+			 * Al crear: se establece el stock inicial. El DAO debe sumar las unidades
+			 * producidas a ese valor.
+			 *
+			 * Al editar: se conserva el stock actual recuperado de la base de datos. El DAO
+			 * solamente lo incrementará si se registra producción.
+			 */
+			if (!modoEdicion) {
 
-            p.setStock_minimo(
-                    ((Number) spnStockMinimo.getValue()).intValue());
+				int stockInicial = ((Number) spnStockActual.getValue()).intValue();
 
-            p.setPrecio_minorista(
-                    ((Number) spnPrecioMinorista.getValue()).intValue());
+				p.setStock_actual(stockInicial);
+			}
 
-            p.setPrecio_mayorista(
-                    ((Number) spnPrecioMayorista.getValue()).intValue());
+			p.setStock_minimo(((Number) spnStockMinimo.getValue()).intValue());
 
-            dao.guardarConProduccion(p, orden, producido, fecha);
+			p.setPrecio_minorista(((Number) spnPrecioMinorista.getValue()).intValue());
 
-            String mensaje;
+			p.setPrecio_mayorista(((Number) spnPrecioMayorista.getValue()).intValue());
 
-            if (modoEdicion) {
-                mensaje = "Producto terminado editado correctamente";
-            } else {
-                mensaje = "Producto terminado guardado correctamente";
-            }
+			dao.guardarConProduccion(p, orden, producido, fecha);
 
-            if (orden != null && producido > 0) {
+			String mensaje;
 
-                int pendiente = Math.max(
-                        0, orden.getPendiente() - producido);
+			if (modoEdicion) {
+				mensaje = "Producto terminado editado correctamente";
+			} else {
+				mensaje = "Producto terminado guardado correctamente";
+			}
 
-                mensaje += "\nSe sumaron "
-                        + FormatoUtil.miles(producido)
-                        + " unidades al stock de " + nombre + ".";
+			if (orden != null && producido > 0) {
 
-                if (pendiente == 0) {
+				int pendiente = Math.max(0, orden.getPendiente() - producido);
 
-                    mensaje += "\nLa orden N° "
-                            + orden.getId_orden_produccion()
-                            + " quedo completada.";
+				mensaje += "\nSe sumaron " + FormatoUtil.miles(producido) + " unidades al stock de " + nombre + ".";
 
-                } else {
+				if (pendiente == 0) {
 
-                    mensaje += "\nQuedan "
-                            + FormatoUtil.miles(pendiente)
-                            + " unidades pendientes de la orden N° "
-                            + orden.getId_orden_produccion() + ".";
-                }
-            }
+					mensaje += "\nLa orden N° " + orden.getId_orden_produccion() + " quedo completada.";
 
-            JOptionPane.showMessageDialog(this, mensaje);
+				} else {
 
-            limpiar();
-            cargarTabla();
+					mensaje += "\nQuedan " + FormatoUtil.miles(pendiente) + " unidades pendientes de la orden N° "
+							+ orden.getId_orden_produccion() + ".";
+				}
+			}
 
-        } catch (Exception ex) {
+			JOptionPane.showMessageDialog(this, mensaje);
 
-            ex.printStackTrace();
+			limpiar();
+			cargarTabla();
 
-            JOptionPane.showMessageDialog(
-                    this,
-                    ex.getMessage(),
-                    "No se pudo guardar",
-                    JOptionPane.ERROR_MESSAGE);
-        }
-    }
+		} catch (Exception ex) {
 
-    // ---------- ELIMINAR ----------
+			ex.printStackTrace();
 
-    private void eliminar() {
+			JOptionPane.showMessageDialog(this, ex.getMessage(), "No se pudo guardar", JOptionPane.ERROR_MESSAGE);
+		}
+	}
 
-        if (seleccionado == null) {
+	// ====================== ELIMINAR ======================
 
-            JOptionPane.showMessageDialog(
-                    this, "Seleccione un producto de la tabla");
+	private void eliminar() {
 
-            return;
-        }
+		if (seleccionado == null) {
 
-        int op = JOptionPane.showConfirmDialog(
-                this,
-                "¿Eliminar \"" + seleccionado.getNombre() + "\"?",
-                "Confirmar",
-                JOptionPane.YES_NO_OPTION);
+			JOptionPane.showMessageDialog(this, "Seleccione un producto de la tabla");
 
-        if (op != JOptionPane.YES_OPTION) {
-            return;
-        }
+			return;
+		}
 
-        try {
+		int op = JOptionPane.showConfirmDialog(this, "¿Eliminar \"" + seleccionado.getNombre() + "\"?", "Confirmar",
+				JOptionPane.YES_NO_OPTION);
 
-            dao.eliminar(seleccionado);
+		if (op != JOptionPane.YES_OPTION) {
+			return;
+		}
 
-            JOptionPane.showMessageDialog(
-                    this, "Producto terminado eliminado correctamente");
+		try {
 
-            limpiar();
-            cargarTabla();
+			dao.eliminar(seleccionado);
 
-        } catch (Exception ex) {
+			JOptionPane.showMessageDialog(this, "Producto terminado eliminado correctamente");
 
-            ex.printStackTrace();
+			limpiar();
+			cargarTabla();
 
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Error al eliminar: " + ex.getMessage(),
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-        }
-    }
+		} catch (Exception ex) {
 
-    // ---------- LIMPIAR ----------
+			ex.printStackTrace();
 
-    private void limpiar() {
+			JOptionPane.showMessageDialog(this, "Error al eliminar: " + ex.getMessage(), "Error",
+					JOptionPane.ERROR_MESSAGE);
+		}
+	}
 
-        seleccionado = null;
-        modoEdicion = false;
+	// ====================== LIMPIAR ======================
 
-        txtNombre.setText("");
-        txtColor.setText("");
+	private void limpiar() {
 
-        spnProducido.setValue(0);
+		seleccionado = null;
+		modoEdicion = false;
 
-        // Al volver al registro nuevo, se habilita el stock inicial.
-        lblStockActual.setText("Stock inicial:");
-        spnStockActual.setValue(0);
-        spnStockActual.setEnabled(true);
+		txtNombre.setText("");
+		txtColor.setText("");
 
-        spnStockMinimo.setValue(0);
-        spnPrecioMinorista.setValue(0);
-        spnPrecioMayorista.setValue(0);
+		spnProducido.setValue(0);
 
-        table.clearSelection();
+		// Al volver al registro nuevo, se habilita el stock inicial.
+		lblStockActual.setText("Stock inicial");
+		spnStockActual.setValue(0);
+		spnStockActual.setEnabled(true);
 
-        cargarCombos();
+		spnStockMinimo.setValue(0);
+		spnPrecioMinorista.setValue(0);
+		spnPrecioMayorista.setValue(0);
 
-        if (cmbCategoria.getItemCount() > 0) {
-            cmbCategoria.setSelectedIndex(0);
-        }
+		table.clearSelection();
 
-        cmbOrden.setSelectedIndex(0);
-    }
+		cargarCombos();
 
-    // ---------- SALIR ----------
+		if (cmbCategoria.getItemCount() > 0) {
+			cmbCategoria.setSelectedIndex(0);
+		}
 
-    private void salir() {
-        dispose();
-    }
+		cmbOrden.setSelectedIndex(0);
+	}
+
+	// ====================== SALIR ======================
+
+	private void salir() {
+		dispose();
+	}
+
+	// ====================== COMPONENTES VISUALES ======================
+
+	/** Fondo degradado rosa, igual al de la pantalla principal. */
+	private static class FondoPanel extends JPanel {
+
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		protected void paintComponent(Graphics g) {
+
+			Graphics2D g2 = (Graphics2D) g.create();
+
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+			int w = getWidth();
+			int h = getHeight();
+
+			g2.setPaint(new GradientPaint(0, 0, new Color(255, 245, 248), 0, h, new Color(250, 205, 222)));
+			g2.fillRect(0, 0, w, h);
+
+			g2.setColor(new Color(255, 255, 255, 120));
+			g2.fillOval(-120, -120, 380, 380);
+			g2.fillOval(w - 260, h - 240, 420, 420);
+
+			g2.setColor(new Color(244, 143, 177, 45));
+			g2.fillOval(w - 200, -90, 280, 280);
+			g2.fillOval(-80, h - 200, 260, 260);
+
+			g2.dispose();
+		}
+	}
+
+	/** Panel blanco con esquinas redondeadas y borde rosa. */
+	private static class TarjetaPanel extends JPanel {
+
+		private static final long serialVersionUID = 1L;
+
+		TarjetaPanel() {
+			setOpaque(false);
+		}
+
+		@Override
+		protected void paintComponent(Graphics g) {
+
+			Graphics2D g2 = (Graphics2D) g.create();
+
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+			int w = getWidth() - 6;
+			int h = getHeight() - 6;
+
+			g2.setColor(new Color(173, 20, 87, 35));
+			g2.fillRoundRect(4, 6, w, h, 28, 28);
+
+			g2.setColor(new Color(255, 255, 255, 240));
+			g2.fillRoundRect(0, 0, w, h, 28, 28);
+
+			g2.setColor(ROSA_MEDIO);
+			g2.setStroke(new BasicStroke(2f));
+			g2.drawRoundRect(0, 0, w, h, 28, 28);
+
+			g2.dispose();
+
+			super.paintComponent(g);
+		}
+	}
+
+	/** Botón redondeado: relleno rosa (principal) o con borde (secundario). */
+	private static class BotonRosa extends JButton {
+
+		private static final long serialVersionUID = 1L;
+
+		private final boolean principal;
+
+		BotonRosa(String texto, boolean principal) {
+
+			super(texto);
+
+			this.principal = principal;
+
+			setContentAreaFilled(false);
+			setBorderPainted(false);
+			setFocusPainted(false);
+			setForeground(principal ? Color.WHITE : ROSA_OSCURO);
+			setFont(new Font("Segoe UI", Font.BOLD, 13));
+			setPreferredSize(new Dimension(100, 36));
+			setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		}
+
+		@Override
+		protected void paintComponent(Graphics g) {
+
+			Graphics2D g2 = (Graphics2D) g.create();
+
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+			boolean hover = getModel().isRollover() || getModel().isArmed();
+
+			if (principal) {
+				g2.setColor(hover ? ROSA_OSCURO : ROSA_FUERTE);
+				g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
+			} else {
+				g2.setColor(hover ? ROSA_CLARO : Color.WHITE);
+				g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 30, 30);
+				g2.setColor(ROSA_FUERTE);
+				g2.setStroke(new BasicStroke(1.5f));
+				g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 30, 30);
+			}
+
+			g2.dispose();
+
+			super.paintComponent(g);
+		}
+	}
 }

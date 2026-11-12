@@ -8,7 +8,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 
-/** Formato con separador de miles estilo Paraguay: 1.500.000 */
+/** Formato con separador de miles estilo Paraguay*/
 public class FormatoUtil {
 
 	private static DecimalFormatSymbols simbolos() {

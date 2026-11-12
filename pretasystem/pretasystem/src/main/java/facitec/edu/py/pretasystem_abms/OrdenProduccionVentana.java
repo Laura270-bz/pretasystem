@@ -1,11 +1,27 @@
 package facitec.edu.py.pretasystem_abms;
 
+import java.awt.BasicStroke;
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GradientPaint;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Insets;
+import java.awt.RenderingHints;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
@@ -14,11 +30,14 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.SpinnerDateModel;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingConstants;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 import facitec.edu.py.pretasystem_dao.Materia_Prima_Dao;
@@ -27,12 +46,24 @@ import facitec.edu.py.pretasystem_entidades.Consumo_Materia_Prima;
 import facitec.edu.py.pretasystem_entidades.Materia_Prima;
 import facitec.edu.py.pretasystem_entidades.Orden_Produccion;
 import facitec.edu.py.pretasystem_util.FormatoUtil;
+import facitec.edu.py.pretasystem_util.Iconos;
 import facitec.edu.py.pretasystem_util.SesionUsuario;
 
-/** TRANSACCION: Orden de Produccion + Consumo de Materia Prima (descuenta stock). */
+/**
+ * TRANSACCION: Orden de Produccion + Consumo de Materia Prima (descuenta
+ * stock). Mismo diseño que la pantalla principal.
+ */
 public class OrdenProduccionVentana extends JFrame {
 
 	private static final long serialVersionUID = 1L;
+
+	private static final Color ROSA_FUERTE = new Color(236, 64, 122);
+	private static final Color ROSA_OSCURO = new Color(173, 20, 87);
+	private static final Color ROSA_MEDIO = new Color(244, 143, 177);
+	private static final Color ROSA_CLARO = new Color(252, 228, 236);
+
+	private static final Font FUENTE_LABEL = new Font("Segoe UI", Font.BOLD, 13);
+	private static final Font FUENTE_CAMPO = new Font("Segoe UI", Font.PLAIN, 14);
 
 	private JSpinner spnFechaInicio;
 	private JSpinner spnCantidadEstimada;
@@ -57,50 +88,146 @@ public class OrdenProduccionVentana extends JFrame {
 	}
 
 	public OrdenProduccionVentana() {
+
 		setTitle("Orden de Producción - Consumo de Materia Prima");
+		setIconImage(Iconos.imagen("orden", 64, ROSA_FUERTE));
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setBounds(100, 100, 800, 560);
+
+		// Sin opción de maximizar ni de cambiar el tamaño.
+		setResizable(false);
+
+		setSize(900, 660);
 		setLocationRelativeTo(null);
-		getContentPane().setLayout(null);
 
-		// ---------- DATOS DE LA ORDEN ----------
-		JLabel lblTitulo1 = new JLabel("DATOS DE LA ORDEN");
-		lblTitulo1.setBounds(15, 10, 200, 16);
-		getContentPane().add(lblTitulo1);
+		setContentPane(new FondoPanel());
+		getContentPane().setLayout(new BorderLayout());
 
-		JLabel lblFecha = new JLabel("Fecha inicio:");
-		lblFecha.setBounds(15, 40, 90, 16);
-		getContentPane().add(lblFecha);
+		getContentPane().add(crearEncabezado(), BorderLayout.NORTH);
+		getContentPane().add(crearCuerpo(), BorderLayout.CENTER);
 
+		cargarCombos();
+	}
+
+	// ====================== DISEÑO ======================
+
+	private JPanel crearEncabezado() {
+
+		JPanel p = new JPanel(new GridLayout(2, 1));
+		p.setOpaque(false);
+		p.setBorder(BorderFactory.createEmptyBorder(20, 30, 5, 30));
+
+		JLabel titulo = new JLabel("Orden de Producción");
+		titulo.setFont(new Font("Segoe UI", Font.BOLD, 30));
+		titulo.setForeground(ROSA_OSCURO);
+
+		JLabel sub = new JLabel("Registro de la orden y consumo de materia prima");
+		sub.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+		sub.setForeground(new Color(150, 80, 110));
+
+		p.add(titulo);
+		p.add(sub);
+
+		return p;
+	}
+
+	private JPanel crearCuerpo() {
+
+		JPanel cuerpo = new JPanel(new BorderLayout(0, 15));
+		cuerpo.setOpaque(false);
+		cuerpo.setBorder(BorderFactory.createEmptyBorder(10, 30, 25, 30));
+
+		cuerpo.add(crearPanelOrden(), BorderLayout.NORTH);
+		cuerpo.add(crearPanelDetalle(), BorderLayout.CENTER);
+		cuerpo.add(crearBotones(), BorderLayout.SOUTH);
+
+		return cuerpo;
+	}
+
+	/** Tarjeta con los datos de la orden: fecha, cantidad estimada y etapa. */
+	private JPanel crearPanelOrden() {
+
+		TarjetaPanel card = new TarjetaPanel();
+		card.setLayout(new GridBagLayout());
+		card.setBorder(BorderFactory.createEmptyBorder(16, 22, 18, 22));
+
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.weightx = 1;
+
+		JLabel lblTitulo = new JLabel("Datos de la orden");
+		lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 17));
+		lblTitulo.setForeground(ROSA_OSCURO);
+		c.gridx = 0;
+		c.gridy = 0;
+		c.gridwidth = 3;
+		c.insets = new Insets(0, 0, 12, 0);
+		card.add(lblTitulo, c);
+
+		c.gridwidth = 1;
+
+		// Etiquetas
+		c.gridy = 1;
+		c.insets = new Insets(0, 0, 4, 15);
+		c.gridx = 0;
+		card.add(etiqueta("Fecha de inicio"), c);
+		c.gridx = 1;
+		card.add(etiqueta("Cantidad estimada"), c);
+		c.gridx = 2;
+		c.insets = new Insets(0, 0, 4, 0);
+		card.add(etiqueta("Etapa"), c);
+
+		// Campos
 		spnFechaInicio = new JSpinner(new SpinnerDateModel());
 		spnFechaInicio.setEditor(new JSpinner.DateEditor(spnFechaInicio, "dd/MM/yyyy"));
-		spnFechaInicio.setBounds(110, 37, 120, 24);
-		getContentPane().add(spnFechaInicio);
-
-		JLabel lblEstimada = new JLabel("Cantidad estimada:");
-		lblEstimada.setBounds(260, 40, 120, 16);
-		getContentPane().add(lblEstimada);
+		estilizarSpinner(spnFechaInicio);
 
 		spnCantidadEstimada = new JSpinner(new SpinnerNumberModel(1, 1, 999999, 1));
 		FormatoUtil.aplicarMiles(spnCantidadEstimada);
-		spnCantidadEstimada.setBounds(385, 37, 100, 24);
-		getContentPane().add(spnCantidadEstimada);
-
-		JLabel lblEtapa = new JLabel("Etapa:");
-		lblEtapa.setBounds(515, 40, 50, 16);
-		getContentPane().add(lblEtapa);
+		estilizarSpinner(spnCantidadEstimada);
 
 		cmbEtapa = new JComboBox<>(new String[] { "Corte", "Limpieza", "Ovillado", "Bobinado", "Sellado" });
-		cmbEtapa.setBounds(565, 37, 200, 24);
-		getContentPane().add(cmbEtapa);
+		estilizarCombo(cmbEtapa);
 
-		// ---------- DETALLE: MATERIA PRIMA A CONSUMIR ----------
-		JLabel lblTitulo2 = new JLabel("MATERIA PRIMA A CONSUMIR");
-		lblTitulo2.setBounds(15, 85, 300, 16);
-		getContentPane().add(lblTitulo2);
+		c.gridy = 2;
+		c.gridx = 0;
+		c.insets = new Insets(0, 0, 0, 15);
+		card.add(spnFechaInicio, c);
+		c.gridx = 1;
+		card.add(spnCantidadEstimada, c);
+		c.gridx = 2;
+		c.insets = new Insets(0, 0, 0, 0);
+		card.add(cmbEtapa, c);
+
+		return card;
+	}
+
+	/** Tarjeta con el selector de materia prima y la tabla del detalle. */
+	private JPanel crearPanelDetalle() {
+
+		TarjetaPanel card = new TarjetaPanel();
+		card.setLayout(new BorderLayout(0, 12));
+		card.setBorder(BorderFactory.createEmptyBorder(16, 22, 20, 22));
+
+		// ---------- ENCABEZADO + SELECTOR ----------
+
+		JPanel arriba = new JPanel(new BorderLayout(0, 10));
+		arriba.setOpaque(false);
+
+		JLabel lblTitulo = new JLabel("Materia prima a consumir");
+		lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 17));
+		lblTitulo.setForeground(ROSA_OSCURO);
+		arriba.add(lblTitulo, BorderLayout.NORTH);
+
+		JPanel fila = new JPanel(new GridBagLayout());
+		fila.setOpaque(false);
+
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridy = 0;
 
 		cmbMateria = new JComboBox<>();
-		cmbMateria.setBounds(15, 110, 380, 26);
+		estilizarCombo(cmbMateria);
 		cmbMateria.setRenderer(new DefaultListCellRenderer() {
 			private static final long serialVersionUID = 1L;
 
@@ -116,26 +243,44 @@ public class OrdenProduccionVentana extends JFrame {
 				return this;
 			}
 		});
-		getContentPane().add(cmbMateria);
 
-		JLabel lblCant = new JLabel("Cantidad:");
-		lblCant.setBounds(410, 115, 60, 16);
-		getContentPane().add(lblCant);
+		c.gridx = 0;
+		c.weightx = 1;
+		c.insets = new Insets(0, 0, 0, 15);
+		fila.add(cmbMateria, c);
+
+		JLabel lblCant = etiqueta("Cantidad:");
+		c.gridx = 1;
+		c.weightx = 0;
+		c.insets = new Insets(0, 0, 0, 8);
+		fila.add(lblCant, c);
 
 		spnCantidad = new JSpinner(new SpinnerNumberModel(1, 1, 999999, 1));
 		FormatoUtil.aplicarMiles(spnCantidad);
-		spnCantidad.setBounds(470, 111, 100, 24);
-		getContentPane().add(spnCantidad);
+		estilizarSpinner(spnCantidad);
+		spnCantidad.setPreferredSize(new Dimension(110, 32));
+		c.gridx = 2;
+		c.insets = new Insets(0, 0, 0, 15);
+		fila.add(spnCantidad, c);
 
-		JButton btnAgregar = new JButton("Agregar");
-		btnAgregar.setBounds(590, 110, 90, 26);
+		BotonRosa btnAgregar = new BotonRosa("Agregar", true);
+		btnAgregar.setPreferredSize(new Dimension(95, 34));
 		btnAgregar.addActionListener(e -> agregarDetalle());
-		getContentPane().add(btnAgregar);
+		c.gridx = 3;
+		c.insets = new Insets(0, 0, 0, 8);
+		fila.add(btnAgregar, c);
 
-		JButton btnQuitar = new JButton("Quitar");
-		btnQuitar.setBounds(685, 110, 85, 26);
+		BotonRosa btnQuitar = new BotonRosa("Quitar", false);
+		btnQuitar.setPreferredSize(new Dimension(95, 34));
 		btnQuitar.addActionListener(e -> quitarDetalle());
-		getContentPane().add(btnQuitar);
+		c.gridx = 4;
+		c.insets = new Insets(0, 0, 0, 0);
+		fila.add(btnQuitar, c);
+
+		arriba.add(fila, BorderLayout.CENTER);
+		card.add(arriba, BorderLayout.NORTH);
+
+		// ---------- TABLA ----------
 
 		modeloTabla = new DefaultTableModel(new Object[] { "Materia Prima", "Cantidad", "Unidad" }, 0) {
 			private static final long serialVersionUID = 1L;
@@ -145,35 +290,116 @@ public class OrdenProduccionVentana extends JFrame {
 				return false;
 			}
 		};
+
 		table = new JTable(modeloTabla);
+		table.setFont(FUENTE_CAMPO);
+		table.setRowHeight(28);
+		table.setShowVerticalLines(false);
+		table.setGridColor(ROSA_CLARO);
+		table.setSelectionBackground(ROSA_MEDIO);
+		table.setSelectionForeground(Color.WHITE);
+		table.setFillsViewportHeight(true);
+
+		DefaultTableCellRenderer header = new DefaultTableCellRenderer() {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Component getTableCellRendererComponent(JTable t, Object v, boolean sel, boolean foc, int r,
+					int col) {
+
+				JLabel l = (JLabel) super.getTableCellRendererComponent(t, v, sel, foc, r, col);
+
+				l.setBackground(ROSA_FUERTE);
+				l.setForeground(Color.WHITE);
+				l.setFont(new Font("Segoe UI", Font.BOLD, 13));
+				l.setHorizontalAlignment(SwingConstants.CENTER);
+				l.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
+				l.setOpaque(true);
+
+				return l;
+			}
+		};
+
+		table.getTableHeader().setDefaultRenderer(header);
+		table.getTableHeader().setReorderingAllowed(false);
+		table.getTableHeader().setPreferredSize(new Dimension(0, 34));
+
 		table.getColumnModel().getColumn(1).setCellRenderer(FormatoUtil.rendererMiles());
+		table.getColumnModel().getColumn(0).setPreferredWidth(350);
+		table.getColumnModel().getColumn(1).setPreferredWidth(120);
+		table.getColumnModel().getColumn(2).setPreferredWidth(100);
+
 		JScrollPane scroll = new JScrollPane(table);
-		scroll.setBounds(15, 150, 755, 290);
-		getContentPane().add(scroll);
+		scroll.setBorder(BorderFactory.createLineBorder(ROSA_MEDIO));
+		scroll.getViewport().setBackground(Color.WHITE);
 
-		// ---------- BOTONES ----------
-		JButton btnConfirmar = new JButton("Confirmar orden");
-		btnConfirmar.setBounds(15, 460, 180, 36);
-		btnConfirmar.addActionListener(e -> confirmar());
-		getContentPane().add(btnConfirmar);
+		card.add(scroll, BorderLayout.CENTER);
 
-		JButton btnCancelar = new JButton("Cancelar");
-		btnCancelar.setBounds(205, 460, 100, 36);
-		btnCancelar.addActionListener(e -> limpiar());
-		getContentPane().add(btnCancelar);
-
-		JButton btnVerOrdenes = new JButton("Ver órdenes");
-		btnVerOrdenes.setBounds(395, 460, 185, 36);
-		btnVerOrdenes.addActionListener(e -> new OrdenesRegistradasVentana().setVisible(true));
-		getContentPane().add(btnVerOrdenes);
-
-		JButton btnSalir = new JButton("Salir");
-		btnSalir.setBounds(670, 460, 100, 36);
-		btnSalir.addActionListener(e -> salir());
-		getContentPane().add(btnSalir);
-
-		cargarCombos();
+		return card;
 	}
+
+	private JPanel crearBotones() {
+
+		JPanel barra = new JPanel(new BorderLayout());
+		barra.setOpaque(false);
+
+		JPanel izquierda = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+		izquierda.setOpaque(false);
+
+		BotonRosa btnConfirmar = new BotonRosa("Confirmar orden", true);
+		btnConfirmar.setPreferredSize(new Dimension(180, 38));
+		btnConfirmar.addActionListener(e -> confirmar());
+		izquierda.add(btnConfirmar);
+
+		BotonRosa btnCancelar = new BotonRosa("Cancelar", false);
+		btnCancelar.setPreferredSize(new Dimension(110, 38));
+		btnCancelar.addActionListener(e -> limpiar());
+		izquierda.add(btnCancelar);
+
+		JPanel derecha = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+		derecha.setOpaque(false);
+
+		BotonRosa btnVerOrdenes = new BotonRosa("Ver órdenes", true);
+		btnVerOrdenes.setPreferredSize(new Dimension(150, 38));
+		btnVerOrdenes.addActionListener(e -> new OrdenesRegistradasVentana().setVisible(true));
+		derecha.add(btnVerOrdenes);
+
+		BotonRosa btnSalir = new BotonRosa("Salir", false);
+		btnSalir.setPreferredSize(new Dimension(110, 38));
+		btnSalir.addActionListener(e -> salir());
+		derecha.add(btnSalir);
+
+		barra.add(izquierda, BorderLayout.WEST);
+		barra.add(derecha, BorderLayout.EAST);
+
+		return barra;
+	}
+
+	private JLabel etiqueta(String texto) {
+
+		JLabel l = new JLabel(texto);
+		l.setFont(FUENTE_LABEL);
+		l.setForeground(ROSA_OSCURO);
+
+		return l;
+	}
+
+	private void estilizarSpinner(JSpinner s) {
+
+		s.setFont(FUENTE_CAMPO);
+		s.setPreferredSize(new Dimension(100, 32));
+		s.setBorder(BorderFactory.createLineBorder(ROSA_MEDIO));
+	}
+
+	private void estilizarCombo(JComboBox<?> c) {
+
+		c.setFont(FUENTE_CAMPO);
+		c.setBackground(Color.WHITE);
+		c.setPreferredSize(new Dimension(100, 32));
+	}
+
+	// ====================== LÓGICA ======================
 
 	private void cargarCombos() {
 		List<Materia_Prima> materias = materiaDao.recuperarPorFiltro("");
@@ -287,5 +513,120 @@ public class OrdenProduccionVentana extends JFrame {
 			}
 		}
 		dispose();
+	}
+
+	// ====================== COMPONENTES VISUALES ======================
+
+	/** Fondo degradado rosa, igual al de la pantalla principal. */
+	private static class FondoPanel extends JPanel {
+
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		protected void paintComponent(Graphics g) {
+
+			Graphics2D g2 = (Graphics2D) g.create();
+
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+			int w = getWidth();
+			int h = getHeight();
+
+			g2.setPaint(new GradientPaint(0, 0, new Color(255, 245, 248), 0, h, new Color(250, 205, 222)));
+			g2.fillRect(0, 0, w, h);
+
+			g2.setColor(new Color(255, 255, 255, 120));
+			g2.fillOval(-120, -120, 380, 380);
+			g2.fillOval(w - 260, h - 240, 420, 420);
+
+			g2.setColor(new Color(244, 143, 177, 45));
+			g2.fillOval(w - 200, -90, 280, 280);
+			g2.fillOval(-80, h - 200, 260, 260);
+
+			g2.dispose();
+		}
+	}
+
+	/** Panel blanco con esquinas redondeadas y borde rosa. */
+	private static class TarjetaPanel extends JPanel {
+
+		private static final long serialVersionUID = 1L;
+
+		TarjetaPanel() {
+			setOpaque(false);
+		}
+
+		@Override
+		protected void paintComponent(Graphics g) {
+
+			Graphics2D g2 = (Graphics2D) g.create();
+
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+			int w = getWidth() - 6;
+			int h = getHeight() - 6;
+
+			g2.setColor(new Color(173, 20, 87, 35));
+			g2.fillRoundRect(4, 6, w, h, 28, 28);
+
+			g2.setColor(new Color(255, 255, 255, 240));
+			g2.fillRoundRect(0, 0, w, h, 28, 28);
+
+			g2.setColor(ROSA_MEDIO);
+			g2.setStroke(new BasicStroke(2f));
+			g2.drawRoundRect(0, 0, w, h, 28, 28);
+
+			g2.dispose();
+
+			super.paintComponent(g);
+		}
+	}
+
+	/** Botón redondeado: relleno rosa (principal) o con borde (secundario). */
+	private static class BotonRosa extends JButton {
+
+		private static final long serialVersionUID = 1L;
+
+		private final boolean principal;
+
+		BotonRosa(String texto, boolean principal) {
+
+			super(texto);
+
+			this.principal = principal;
+
+			setContentAreaFilled(false);
+			setBorderPainted(false);
+			setFocusPainted(false);
+			setForeground(principal ? Color.WHITE : ROSA_OSCURO);
+			setFont(new Font("Segoe UI", Font.BOLD, 13));
+			setPreferredSize(new Dimension(100, 36));
+			setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		}
+
+		@Override
+		protected void paintComponent(Graphics g) {
+
+			Graphics2D g2 = (Graphics2D) g.create();
+
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+			boolean hover = getModel().isRollover() || getModel().isArmed();
+
+			if (principal) {
+				g2.setColor(hover ? ROSA_OSCURO : ROSA_FUERTE);
+				g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
+			} else {
+				g2.setColor(hover ? ROSA_CLARO : Color.WHITE);
+				g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 30, 30);
+				g2.setColor(ROSA_FUERTE);
+				g2.setStroke(new BasicStroke(1.5f));
+				g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 30, 30);
+			}
+
+			g2.dispose();
+
+			super.paintComponent(g);
+		}
 	}
 }
